@@ -159,7 +159,8 @@ class MotionPlanning(Drone):
         print(grid_goal)
         # TODO: adapt to set goal as latitude / longitude position and convert
         #grid_goal_lat_lon = (-122.3980, 37.7927, 183)
-        grid_goal_lat_lon = (self.global_position[0] + 0.003, self.global_position[1] + 0.003)
+        grid_goal_lat_lon = (-122.3971, 37.7928, 0)
+        #grid_goal_lat_lon = (self.global_position[0] + 0.003, self.global_position[1] + 0.003)
         grid_goal = global_to_local(grid_goal_lat_lon,self.global_home)
         grid_goal = tuple((int(grid_goal[0]-north_offset),int(grid_goal[1]-east_offset)))
         # Run A* to find a path from start to goal
@@ -176,6 +177,7 @@ class MotionPlanning(Drone):
 
         # Convert path to waypoints
         waypoints = [[p[0] + north_offset, p[1] + east_offset, TARGET_ALTITUDE, 0] for p in pruned_path]
+        print (waypoints)
         # Set self.waypoints
         self.waypoints = waypoints
         # TODO: send waypoints to sim (this is just for visualization of waypoints)

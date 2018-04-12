@@ -93,6 +93,7 @@ class BackyardFlyer(Drone):
 
     def waypoint_transition(self):
         print("waypoint transition")
+        print (self.all_waypoints)
         self.target_position = self.all_waypoints.pop(0)
         print('target position', self.target_position)
         self.cmd_position(self.target_position[0], self.target_position[1], self.target_position[2], 0.0)

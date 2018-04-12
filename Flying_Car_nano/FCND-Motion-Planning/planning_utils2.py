@@ -1,6 +1,7 @@
 from enum import Enum
 from queue import PriorityQueue
 import numpy as np
+import numpy.linalg as LA
 from sklearn.neighbors import KDTree
 from shapely.geometry import Polygon, Point, LineString
 import networkx as nx
@@ -151,8 +152,8 @@ def a_star_NX(graph, heuristic, start, goal):
 
 
 
-def heuristic(position, goal_position):
-    return np.linalg.norm(np.array(position) - np.array(goal_position))
+def heuristic(n1, n2):
+    return LA.norm(np.array(n2) - np.array(n1))
 def point(p):
     return np.array([p[0], p[1], 1.]).reshape(1, -1)
 

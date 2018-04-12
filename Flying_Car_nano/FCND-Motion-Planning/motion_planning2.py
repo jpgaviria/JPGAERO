@@ -5,6 +5,7 @@ from enum import Enum, auto
 import networkx as nx
 from shapely.geometry import Polygon, Point, LineString
 from sklearn.neighbors import KDTree
+from sampling import Sampler
 
 import numpy as np
 #import pandas as pd
@@ -139,10 +140,13 @@ class MotionPlanning(Drone):
         lon0 = lon0.replace(" lon0 ","")
         lat0 = float(lat0)
         lon0 = float(lon0)
+        
         # # TODO: set home position to (lon0, lat0, 0)
         self.set_home_position(lon0,lat0,0)
+        
         # TODO: retrieve current global position
         Globalcurrent = np.array((self.global_position[0], self.global_position[1],self.global_position[2]))
+        
         # TODO: convert to current local position using global_to_local()
         Localcurrent = global_to_local(Globalcurrent,self.global_home)
         #self.local_position = [Localcurrent[0],Localcurrent[1],Localcurrent[2]]
@@ -180,53 +184,64 @@ class MotionPlanning(Drone):
 
         # TODO (if you're feeling ambitious): Try a different approach altogether!
         """ USING Probabilistic roadmap"""
-		sampler = Sampler(data)
+        sampler = Sampler(data)
         polygons = sampler._polygons
-		nodes = sampler.sample(300)
-		print(len(nodes))
+        nodes = sampler.sample(20)
+        print(len(nodes))
 
-        grid, north_offset, east_offset = create_grid(data, zvalsMax, SAFETY_DISTANCE)
+        _, north_offset, east_offset = create_grid(data, sampler._zmax, SAFETY_DISTANCE)
         print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
         # Define starting point on the grid (this is just grid center)
         grid_start = (-north_offset, -east_offset)
         # TODO: convert start position to current position rather than map center
         self.set_home_position(self.global_position[0], self.global_position[1],self.global_position[2])
         # Set goal as some arbitrary position on the grid
-        grid_goal = (-north_offset + 10, -east_offset + 10)
-        print(grid_goal)
+        #grid_goal = (-north_offset + 10, -east_offset + 10)
+        #print(grid_goal)
         #grid_goal_lat_lon = (self.global_position[0] + 0.003, self.global_position[1] + 0.003)
-        #grid_goal_lat_lon = (-122.3980, 37.7927, 0)
+        #grid_goal_lat_lon = (-122.3965, 37.7933, 0)
         grid_goal_lat_lon = (self.global_position[0]+0.0001, self.global_position[1]+0.0001, 0)
         grid_goal = global_to_local(grid_goal_lat_lon,self.global_home)
         grid_goal = tuple((int(grid_goal[0]-north_offset),int(grid_goal[1]-east_offset)))
-        
-        points = np.array(list(zip(xvals, yvals, zvals)))
 
-        nodes = []
-        start_point = np.array((grid_start[0],grid_start[1],0))
-        goal_point = np.array((grid_goal[0],grid_goal[1],0))
+        start_point = np.array((grid_start[0],grid_start[1],10))
+        goal_point  = np.array((grid_goal[0],grid_goal[1],10))
+
         nodes.append(start_point)
         nodes.append(goal_point)
 
-        tree = KDTree(data[:,:3])
-        for p in points:
-            idxs = tree.query([p], k=1, return_distance=False)[0]
-            #print(idxs) 
-            if not collides(polygons[idxs[0]], p):
-                nodes.append(p)   
         g = create_graph(nodes, 3, polygons)
         #print (start, goal)
         # TODO: adapt to set goal as latitude / longitude position and convert
-        start = list(g.nodes)[0]
-        goal = list(g.nodes)[1]
+        #start = list(g.nodes)[-2]
+        #goal = list(g.nodes)[-1]
+        #start = np.array((grid_start[0],grid_start[1],0))
+        #goal  = np.array((grid_goal[0],grid_goal[1],0))
+        start = list(g.nodes)[-2]
+        goal = list(g.nodes)[-1]
+        # k = np.random.randint(len(g.nodes))
+        # print(k, len(g.nodes))
+        # goal = list(g.nodes)[k]
         print (start, goal)
         path, cost = a_star_NX(g, heuristic, start, goal)
         print(len(path), path)
 
         # Convert path to waypoints
-        waypoints = []
-        for p in path:
-            waypoints.append([p[0] + north_offset, p[1] + east_offset, TARGET_ALTITUDE])
+        # waypoints = []
+        # for p in path:
+        #     waypoints.append([p[0] + north_offset, p[1] + east_offset, TARGET_ALTITUDE,0])
+        #waypoints = [[0,0,TARGET_ALTITUDE, 0]]
+        if path == []:
+            waypoints = [[0,0,TARGET_ALTITUDE, 0],[int(10.0),int( 0.0), TARGET_ALTITUDE, 0], [int(10.0), int(10.0), TARGET_ALTITUDE, 0]\
+                        , [int(0.0), int(10.0), TARGET_ALTITUDE,0], [int(0.0), int(0.0), TARGET_ALTITUDE,0]]
+        else:
+            waypoints = [[0,0,TARGET_ALTITUDE, 0]]
+            for p in path:
+                waypoints.append([int(p[0]) + north_offset, int(p[1]) + east_offset, TARGET_ALTITUDE, 0])
+            waypoints.append([goal_point[0]+north_offset,goal_point[1]+east_offset,TARGET_ALTITUDE,0])
+        if waypoints[0]==waypoints[1]:
+            waypoints.pop(0)
+        print (waypoints)
         # Set self.waypoints
         self.waypoints = waypoints
         # TODO: send waypoints to sim (this is just for visualization of waypoints)
