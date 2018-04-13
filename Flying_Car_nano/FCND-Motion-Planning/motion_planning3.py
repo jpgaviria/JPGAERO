@@ -12,8 +12,7 @@ from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection
 from udacidrone.messaging import MsgID
 from udacidrone.frame_utils import global_to_local
-from skimage.morphology import medial_axis
-from skimage.util import invert
+
 
 class States(Enum):
     MANUAL = auto()
@@ -123,8 +122,8 @@ class MotionPlanning(Drone):
         for wp in self.waypoints:
             local_waypoints.append([int(wp[0]+Localcurrent[0]),int(wp[1]+Localcurrent[1]),\
                                      int(wp[2]),int(wp[3])])
-        #print (local_waypoints)
-        data = msgpack.dumps(local_waypoints)
+        print (local_waypoints)
+        data = msgpack.dumps(self.waypoints)
         #self.connection.
         self.connection._master.write(data)
     """ New function in motion planning to make a plan, get's called after arming state"""

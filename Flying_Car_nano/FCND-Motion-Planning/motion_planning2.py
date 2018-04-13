@@ -191,8 +191,12 @@ class MotionPlanning(Drone):
 
         _, north_offset, east_offset = create_grid(data, sampler._zmax, SAFETY_DISTANCE)
         print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
+        # to support starting on any point on the map add the local current to the offset
+        north_offset = -north_offset +int(Localcurrent[0])
+        east_offset = -east_offset+int(Localcurrent[1])
+        print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
         # Define starting point on the grid (this is just grid center)
-        grid_start = (-north_offset, -east_offset)
+        grid_start = (north_offset, east_offset )
         # TODO: convert start position to current position rather than map center
         self.set_home_position(self.global_position[0], self.global_position[1],self.global_position[2])
         # Set goal as some arbitrary position on the grid
