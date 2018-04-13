@@ -6,6 +6,7 @@ import networkx as nx
 from shapely.geometry import Polygon, Point, LineString
 from sklearn.neighbors import KDTree
 from sampling import Sampler
+import matplotlib.pyplot as plt
 
 import numpy as np
 #import pandas as pd
@@ -165,7 +166,7 @@ class MotionPlanning(Drone):
         nodes = sampler.sample(200)
         print(len(nodes))
 
-        _, north_offset, east_offset = create_grid(data, sampler._zmax, SAFETY_DISTANCE)
+        grid , north_offset, east_offset = create_grid(data, sampler._zmax, SAFETY_DISTANCE)
         print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
         # to support starting on any point on the map add the local current to the offset
         print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
@@ -191,6 +192,33 @@ class MotionPlanning(Drone):
         nodes.append(goal_point)
 
         g = create_graph(nodes, 3, polygons)
+        print("Number of edges", len(g.edges))
+        # fig = plt.figure()
+
+        # plt.imshow(grid, cmap='Greys', origin='lower')
+
+        # nmin = np.min(data[:, 0])
+        # emin = np.min(data[:, 1])
+
+        # # draw edges
+        # for (n1, n2) in g.edges:
+        #     plt.plot([n1[1] - emin, n2[1] - emin], [n1[0] - nmin, n2[0] - nmin], 'black' , alpha=0.5)
+
+        # # draw all nodes
+        # for n1 in nodes:
+        #     plt.scatter(n1[1] - emin, n1[0] - nmin, c='blue')
+            
+        # # draw connected nodes
+        # for n1 in g.nodes:
+        #     plt.scatter(n1[1] - emin, n1[0] - nmin, c='red')
+            
+
+
+        # plt.xlabel('NORTH')
+        # plt.ylabel('EAST')
+
+        # plt.show()
+
         start = list(g.nodes)[-2]
         goal = list(g.nodes)[-1]
         print (start, goal)

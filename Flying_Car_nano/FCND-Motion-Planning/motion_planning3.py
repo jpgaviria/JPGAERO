@@ -193,7 +193,9 @@ class MotionPlanning(Drone):
         pruned_path.append([grid_goal[0],grid_goal[1]])
 
         # TODO (if you're feeling ambitious): Try a different approach altogether!
-
+        #add heading to all the waypoints
+        for i in range(0,len(pruned_path)-1):
+            pruned_path[i][3] = np.arctan2((pruned_path[i+1][1]-pruned_path[i][1]),(pruned_path[i+1][0]-pruned_path[i][0]))
         # Convert path to waypoints
         waypoints = [[p[0] + north_offset, p[1] + east_offset, TARGET_ALTITUDE, 0] for p in pruned_path]
         #print (waypoints)
