@@ -149,7 +149,7 @@ class MotionPlanning(Drone):
         
         # Define a grid for a particular altitude and safety margin around obstacles
         #""" Create grid comes from the planning_utils.py so we can call it directly here"""
-        #grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
+        grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
         print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
         # Define starting point on the grid (this is just grid center)
         grid_center = (north_offset, east_offset)
