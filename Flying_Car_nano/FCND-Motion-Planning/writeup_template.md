@@ -40,6 +40,8 @@ Here's | A | Snappy | Table
 4 | 2 | 3 | abcd
 
 ### Implementing Your Path Planning Algorithm
+I tried 3 methods, the original from the excercise that is used in motion_planning.py, using probabilistic method in motion_planning2.py and using medial-axis on motion_planning3.py. The method that worked the best was medial-axis, it's fast, safe and always works.
+
 
 #### 1. Set your global home position
 Here students should read the first line of the csv file, extract lat0 and lon0 as floating point values and use the self.set_home_position() method to set global home. Explain briefly how you accomplished this in your code.
