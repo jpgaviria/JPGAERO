@@ -58,10 +58,11 @@ class Action(Enum):
     EAST = (0, 1, 1)
     NORTH = (-1, 0, 1)
     SOUTH = (1, 0, 1)
-    NORTH_EAST = (1,1,np.sqrt(2))
-    SOUTH_EAST = (-1,1,np.sqrt(2))
-    NORTH_WEST = (1,-1,np.sqrt(2))
-    SOUTH_WEST = (-1,-1,np.sqrt(2))
+    """ Added lateral motions with a cost os square root of 2"""
+    NORTH_WEST = (-1, -1, np.sqrt(2))
+    NORTH_EAST = (-1, 1, np.sqrt(2))
+    SOUTH_WEST = (1, -1, np.sqrt(2))
+    SOUTH_EAST = (1, 1, np.sqrt(2))
 
     @property
     def cost(self):
@@ -91,21 +92,21 @@ def valid_actions(grid, current_node):
         valid_actions.remove(Action.WEST)
     if y + 1 > m or grid[x, y + 1] == 1:
         valid_actions.remove(Action.EAST)
-    #Adding diagonal actions
-    if (x - 1 < 0 or grid[x - 1, y] == 1) or (y + 1 > m or grid[x, y + 1] == 1):
-        valid_actions.remove(Action.NORTH_EAST)
-    if (x + 1 > n or grid[x + 1, y] == 1) or (y + 1 > m or grid[x, y + 1] == 1):
-        valid_actions.remove(Action.SOUTH_EAST)
-    if (x - 1 < 0 or grid[x - 1, y] == 1) or (y - 1 < 0 or grid[x, y - 1] == 1):
+
+    if (x - 1 < 0 or y - 1 < 0) or grid[x - 1, y - 1] == 1:
         valid_actions.remove(Action.NORTH_WEST)
-    if (x + 1 > n or grid[x + 1, y] == 1) or (y - 1 < 0 or grid[x, y - 1] == 1):
+    if (x - 1 < 0 or y + 1 > m) or grid[x - 1, y + 1] == 1:
+        valid_actions.remove(Action.NORTH_EAST)
+    if (x + 1 > n or y - 1 < 0) or grid[x + 1, y - 1] == 1:
         valid_actions.remove(Action.SOUTH_WEST)
+    if (x + 1 > n or y + 1 > m) or grid[x + 1, y + 1] == 1:
+        valid_actions.remove(Action.SOUTH_EAST)
 
     return valid_actions
-
-
 def a_star_NX(graph, heuristic, start, goal):
-
+    """Modified A* to work with NetworkX graphs."""
+    
+    # TODO: complete
 
     path = []
     queue = PriorityQueue()
@@ -150,8 +151,6 @@ def a_star_NX(graph, heuristic, start, goal):
             
     return path[::-1], path_cost
 
-
-
 def heuristic(n1, n2):
     return LA.norm(np.array(n2) - np.array(n1))
 def point(p):
@@ -160,7 +159,8 @@ def point(p):
 def collinearity_check(p1, p2, p3, epsilon=1e-6):   
     m = np.concatenate((p1, p2, p3), 0)
     det = np.linalg.det(m)
-    return abs(det) < epsilon
+    """ Changed The value from epsilon to 5 so that points are not too close to each other"""
+    return abs(det) < 5.0#epsilon
 def prune_path(path):
     pruned_path = [p for p in path]
     # TODO: prune the path!
@@ -190,17 +190,7 @@ def can_connect(n1, n2, polygons):
         if p[0].crosses(l) and p[1] >= min(n1[2], n2[2]):
             return False
     return True
-    # possible = False
-    # n1 = np.array(n1)
-    # n2 = np.array(n2)
-    # line = LineString([n1[:2],n2[:2]])
-    # for poly in polygons:
-    #     possible = False
-    #     if not line.crosses(poly[0]):# and poly[1] >= min(n1[2], n2[2]):
-    #         possible = True
-    #     elif possible == False:
-    #         break
-    # return possible
+
 
 def create_graph(nodes, k, polygons):
     g = nx.Graph()
@@ -215,38 +205,3 @@ def create_graph(nodes, k, polygons):
                 if can_connect(n1, n2, polygons):
                     g.add_edge(tuple(n1),tuple(n2), weight=1)
     return g
-# def extract_polygons(data):
-
-    # polygons = []
-    # for i in range(data.shape[0]):
-        # north, east, alt, d_north, d_east, d_alt = data[i, :]
-
-        # # polygons.append(Polygon(coords))
-        # # TODO: Extract the 4 corners of the obstacle
-        # p1 = (north - d_north,east + d_east)
-        # p2 = (north + d_north,east + d_east)
-        # p3 = (north + d_north,east - d_east)
-        # p4 = (north - d_north,east - d_east)
-        # # NOTE: The order of the points matters since
-        # # `shapely` draws the sequentially from point to point.
-        # #
-        # # If the area of the polygon is 0 you've likely got a weird
-        # # order.
-        # corners = [p1,p2,p3,p4]
-        
-        # # TODO: Compute the height of the polygon
-        # height = alt + d_alt
-
-        # # TODO: Once you've defined corners, define polygons
-        # p = Polygon(corners)
-        # polygons.append((p, height))
-
-    # return polygons
-# def collides(polygon, point):   
-    # # TODO: Determine whether the point collides
-    # # with any obstacles.
-    # collide = False
-    # #for poly in polygons:
-    # if polygon[0].contains(Point(point))and polygon[1] >= point[2]:
-        # collide = True    
-    # return collide

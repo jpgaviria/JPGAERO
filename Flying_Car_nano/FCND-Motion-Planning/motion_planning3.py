@@ -6,8 +6,11 @@ from enum import Enum, auto
 import numpy as np
 #import pandas as pd
 import csv
+from skimage.morphology import medial_axis
+from skimage.util import invert
+import matplotlib.pyplot as plt
 
-from planning_utils import a_star, heuristic, create_grid, prune_path
+from planning_utils import heuristic, create_grid, prune_path, find_start_goal, a_star
 from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection
 from udacidrone.messaging import MsgID
@@ -33,8 +36,6 @@ class MotionPlanning(Drone):
         self.waypoints = []
         self.in_mission = True
         self.check_state = {}
-        data = msgpack.dumps(self.waypoints)
-        self.connection._master.write(data)
 
         # initial state
         self.flight_state = States.MANUAL
@@ -115,16 +116,7 @@ class MotionPlanning(Drone):
     this is just for visualization of waypoints """
     def send_waypoints(self):
         print("Sending waypoints to simulator ...")
-        Globalcurrent = np.array((self.global_position[0], self.global_position[1],self.global_position[2]))
-        #convert to current local position using global_to_local()
-        Localcurrent = global_to_local(Globalcurrent,self.global_home)
-        local_waypoints = []
-        for wp in self.waypoints:
-            local_waypoints.append([int(wp[0]+Localcurrent[0]),int(wp[1]+Localcurrent[1]),\
-                                     int(wp[2]),int(wp[3])])
-        print (local_waypoints)
         data = msgpack.dumps(self.waypoints)
-        #self.connection.
         self.connection._master.write(data)
     """ New function in motion planning to make a plan, get's called after arming state"""
     def plan_path(self):
@@ -136,7 +128,8 @@ class MotionPlanning(Drone):
         self.target_position[2] = TARGET_ALTITUDE
 
         # TODO: read lat0, lon0 from colliders into floating point values
-        # latlondata = np.genfromtxt('colliders.csv', dtype="Float64", names=['lat0','lon0'], delimiter=",")
+        """ probably the np.genfromtxt fuction could have done this, but I was not able
+        to find the way, used csv.reader to get it"""
         latlondata = csv.reader(open('colliders.csv', newline=''), delimiter=',')
         for row in latlondata:
             lat0, lon0 = row[:2]
@@ -160,39 +153,49 @@ class MotionPlanning(Drone):
         # Define a grid for a particular altitude and safety margin around obstacles
         """ Create grid comes from the planning_utils.py so we can call it directly here"""
         grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
-        print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
-        # to support starting on any point on the map add the local current to the offset
-        north_offset = -north_offset +int(Localcurrent[0])
-        east_offset = -east_offset+int(Localcurrent[1])
+        """ Using Medial-Axis solution for motion planning 3"""
+        skeleton = medial_axis(invert(grid))
         print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
         # Define starting point on the grid (this is just grid center)
-        grid_start = (north_offset, east_offset)
+        grid_center = (north_offset, east_offset)
         # TODO: convert start position to current position rather than map center
-        self.set_home_position(self.global_position[0], self.global_position[1],self.global_position[2])
+        """ Get local grid position and determine the new grid start from global home then
+        add it to grid center """
+        Localcurrent = global_to_local(self.global_position,self.global_home)
+        grid_start = (int(-grid_center[0]+Localcurrent[0]),int(-grid_center[1]+Localcurrent[1]))
+
         # Set goal as some arbitrary position on the grid
-        grid_goal = (-north_offset + 10, -east_offset + 10)
-        print(grid_goal)
+        #grid_goal = (-north_offset + 10, -east_offset + 10)
         # TODO: adapt to set goal as latitude / longitude position and convert
-        #grid_goal_lat_lon = (-122.3980, 37.7927, 183)
-        #grid_goal_lat_lon = (-122.3971, 37.7928, 0)
-        grid_goal_lat_lon = (self.global_position[0] + 0.0001, self.global_position[1] + 0.0001, self.global_position[2])
+        """ code to get the grid goal based on LAT LONG position, assume altitude is 0 for goal"""
+        grid_goal_lat_lon = (-122.39966, 37.793593, 0)
+        #grid_goal_lat_lon = (-122.397185, 37.792857, 0)
         grid_goal = global_to_local(grid_goal_lat_lon,self.global_home)
-        grid_goal = tuple((int(grid_goal[0]+north_offset),int(grid_goal[1]+east_offset)))
-        print(grid_goal)
+        grid_goal = tuple((int(grid_goal[0]-north_offset),int(grid_goal[1]-east_offset)))
+        print(grid_start, grid_goal)
         # Run A* to find a path from start to goal
         # TODO: add diagonal motions with a cost of sqrt(2) to your A* implementation 
         """ Done on Planning_utils.py """ 
         # or move to a different search space such as a graph (not done here)
         print('Local Start and Goal: ', grid_start, grid_goal)
+ 
+        """ Using Medial-Axis solution to find the skeleton start and goal"""
+        skel_start, skel_goal = find_start_goal(skeleton, grid_start, grid_goal)
+
+        print(grid_start, grid_goal)
+        print(skel_start, skel_goal)
         """ a_star, heuristic come from the planning_utils.py so we can call it directly"""
-        path, _ = a_star(grid, heuristic, grid_start, grid_goal)
+        #path, _ = a_star(grid, heuristic, grid_start, grid_goal)
+        path, _ = a_star(invert(skeleton).astype(np.int), heuristic, tuple(skel_start), tuple(skel_goal))
         # TODO: prune path to minimize number of waypoints
         pruned_path = prune_path(path)
+        """ Add the grid goal so that it can fly to the exact location"""
+        pruned_path.append([grid_goal[0],grid_goal[1]])
 
         # TODO (if you're feeling ambitious): Try a different approach altogether!
 
         # Convert path to waypoints
-        waypoints = [[p[0] - north_offset, p[1] - east_offset, TARGET_ALTITUDE, 0] for p in pruned_path]
+        waypoints = [[p[0] + north_offset, p[1] + east_offset, TARGET_ALTITUDE, 0] for p in pruned_path]
         #print (waypoints)
         # Set self.waypoints
         self.waypoints = waypoints

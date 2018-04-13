@@ -131,7 +131,8 @@ class MotionPlanning(Drone):
         self.target_position[2] = TARGET_ALTITUDE
 
         # TODO: read lat0, lon0 from colliders into floating point values
-        # latlondata = np.genfromtxt('colliders.csv', dtype="Float64", names=['lat0','lon0'], delimiter=",")
+        """ probably the np.genfromtxt fuction could have done this, but I was not able
+        to find the way, used csv.reader to get it"""
         latlondata = csv.reader(open('colliders.csv', newline=''), delimiter=',')
         for row in latlondata:
             lat0, lon0 = row[:2]
@@ -140,13 +141,10 @@ class MotionPlanning(Drone):
         lon0 = lon0.replace(" lon0 ","")
         lat0 = float(lat0)
         lon0 = float(lon0)
-        
         # # TODO: set home position to (lon0, lat0, 0)
         self.set_home_position(lon0,lat0,0)
-        
         # TODO: retrieve current global position
         Globalcurrent = np.array((self.global_position[0], self.global_position[1],self.global_position[2]))
-        
         # TODO: convert to current local position using global_to_local()
         Localcurrent = global_to_local(Globalcurrent,self.global_home)
         #self.local_position = [Localcurrent[0],Localcurrent[1],Localcurrent[2]]
@@ -156,55 +154,33 @@ class MotionPlanning(Drone):
         data = np.loadtxt('colliders.csv', delimiter=',', dtype='Float64', skiprows=2)
 
 
-        # # Define a grid for a particular altitude and safety margin around obstacles
-        # """ Create grid comes from the planning_utils.py so we can call it directly here"""
-        # grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
-        # print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
-        # # Define starting point on the grid (this is just grid center)
-        # grid_start = (-north_offset, -east_offset)
-        # # TODO: convert start position to current position rather than map center
-        # self.set_home_position(self.global_position[0], self.global_position[1],self.global_position[2])
-        # # Set goal as some arbitrary position on the grid
-        # grid_goal = (-north_offset + 10, -east_offset + 10)
-        # print(grid_goal)
-        # # TODO: adapt to set goal as latitude / longitude position and convert
-        # #grid_goal_lat_lon = (-122.3980, 37.7927, 183)
-        # grid_goal_lat_lon = (self.global_position[0] + 0.003, self.global_position[1] + 0.003)
-        # grid_goal = global_to_local(grid_goal_lat_lon,self.global_home)
-        # grid_goal = tuple((int(grid_goal[0]-north_offset),int(grid_goal[1]-east_offset)))
-        # # Run A* to find a path from start to goal
-        # # TODO: add diagonal motions with a cost of sqrt(2) to your A* implementation 
-        # """ Done on Planning_utils.py """ 
-        # # or move to a different search space such as a graph (not done here)
-        # print('Local Start and Goal: ', grid_start, grid_goal)
-        # """ a_star, heuristic come from the planning_utils.py so we can call it directly"""
-        # path, _ = a_star(grid, heuristic, grid_start, grid_goal)
-        # # TODO: prune path to minimize number of waypoints
-        # pruned_path = prune_path(path)
+        # Define a grid for a particular altitude and safety margin around obstacles
+        #""" Create grid comes from the planning_utils.py so we can call it directly here"""
+        #grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
 
         # TODO (if you're feeling ambitious): Try a different approach altogether!
         """ USING Probabilistic roadmap"""
         sampler = Sampler(data)
         polygons = sampler._polygons
-        nodes = sampler.sample(20)
+        nodes = sampler.sample(200)
         print(len(nodes))
 
         _, north_offset, east_offset = create_grid(data, sampler._zmax, SAFETY_DISTANCE)
         print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
         # to support starting on any point on the map add the local current to the offset
-        north_offset = -north_offset +int(Localcurrent[0])
-        east_offset = -east_offset+int(Localcurrent[1])
         print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
         # Define starting point on the grid (this is just grid center)
-        grid_start = (north_offset, east_offset )
+        grid_center = (north_offset, east_offset)
         # TODO: convert start position to current position rather than map center
-        self.set_home_position(self.global_position[0], self.global_position[1],self.global_position[2])
+        """ Get local grid position and determine the new grid start from global home then
+        add it to grid center """
+        Localcurrent = global_to_local(self.global_position,self.global_home)
+        grid_start = (int(-grid_center[0]+Localcurrent[0]),int(-grid_center[1]+Localcurrent[1]))
+
         # Set goal as some arbitrary position on the grid
-        #grid_goal = (-north_offset + 10, -east_offset + 10)
-        #print(grid_goal)
-        #grid_goal_lat_lon = (self.global_position[0] + 0.003, self.global_position[1] + 0.003)
-        #grid_goal_lat_lon = (-122.3965, 37.7933, 0)
-        grid_goal_lat_lon = (self.global_position[0]+0.0001, self.global_position[1]+0.0001, 0)
+        # TODO: adapt to set goal as latitude / longitude position and convert
+        """ code to get the grid goal based on LAT LONG position, assume altitude is 0 for goal"""
+        grid_goal_lat_lon = (-122.397185, 37.792857, 0)
         grid_goal = global_to_local(grid_goal_lat_lon,self.global_home)
         grid_goal = tuple((int(grid_goal[0]-north_offset),int(grid_goal[1]-east_offset)))
 
@@ -215,26 +191,13 @@ class MotionPlanning(Drone):
         nodes.append(goal_point)
 
         g = create_graph(nodes, 3, polygons)
-        #print (start, goal)
-        # TODO: adapt to set goal as latitude / longitude position and convert
-        #start = list(g.nodes)[-2]
-        #goal = list(g.nodes)[-1]
-        #start = np.array((grid_start[0],grid_start[1],0))
-        #goal  = np.array((grid_goal[0],grid_goal[1],0))
         start = list(g.nodes)[-2]
         goal = list(g.nodes)[-1]
-        # k = np.random.randint(len(g.nodes))
-        # print(k, len(g.nodes))
-        # goal = list(g.nodes)[k]
         print (start, goal)
         path, cost = a_star_NX(g, heuristic, start, goal)
         print(len(path), path)
 
         # Convert path to waypoints
-        # waypoints = []
-        # for p in path:
-        #     waypoints.append([p[0] + north_offset, p[1] + east_offset, TARGET_ALTITUDE,0])
-        #waypoints = [[0,0,TARGET_ALTITUDE, 0]]
         if path == []:
             waypoints = [[0,0,TARGET_ALTITUDE, 0],[int(10.0),int( 0.0), TARGET_ALTITUDE, 0], [int(10.0), int(10.0), TARGET_ALTITUDE, 0]\
                         , [int(0.0), int(10.0), TARGET_ALTITUDE,0], [int(0.0), int(0.0), TARGET_ALTITUDE,0]]
@@ -243,8 +206,6 @@ class MotionPlanning(Drone):
             for p in path:
                 waypoints.append([int(p[0]) + north_offset, int(p[1]) + east_offset, TARGET_ALTITUDE, 0])
             waypoints.append([goal_point[0]+north_offset,goal_point[1]+east_offset,TARGET_ALTITUDE,0])
-        if waypoints[0]==waypoints[1]:
-            waypoints.pop(0)
         print (waypoints)
         # Set self.waypoints
         self.waypoints = waypoints

@@ -1,7 +1,6 @@
 from enum import Enum
 from queue import PriorityQueue
 import numpy as np
-from sklearn.neighbors import KDTree
 
 def create_grid(data, drone_altitude, safety_distance):
     """
@@ -39,9 +38,6 @@ def create_grid(data, drone_altitude, safety_distance):
             grid[obstacle[0]:obstacle[1]+1, obstacle[2]:obstacle[3]+1] = 1
 
     return grid, int(north_min), int(east_min)
-
-
-# Assume all actions cost the same.
 class Action(Enum):
     """
     An action is represented by a 3 element tuple.
@@ -55,10 +51,11 @@ class Action(Enum):
     EAST = (0, 1, 1)
     NORTH = (-1, 0, 1)
     SOUTH = (1, 0, 1)
-    NORTH_EAST = (1,1,np.sqrt(2))
-    SOUTH_EAST = (-1,1,np.sqrt(2))
-    NORTH_WEST = (1,-1,np.sqrt(2))
-    SOUTH_WEST = (-1,-1,np.sqrt(2))
+    """ Added lateral motions with a cost os square root of 2"""
+    NORTH_WEST = (-1, -1, np.sqrt(2))
+    NORTH_EAST = (-1, 1, np.sqrt(2))
+    SOUTH_WEST = (1, -1, np.sqrt(2))
+    SOUTH_EAST = (1, 1, np.sqrt(2))
 
     @property
     def cost(self):
@@ -88,19 +85,17 @@ def valid_actions(grid, current_node):
         valid_actions.remove(Action.WEST)
     if y + 1 > m or grid[x, y + 1] == 1:
         valid_actions.remove(Action.EAST)
-    #Adding diagonal actions
-    if (x - 1 < 0 or grid[x - 1, y] == 1) or (y + 1 > m or grid[x, y + 1] == 1):
-        valid_actions.remove(Action.NORTH_EAST)
-    if (x + 1 > n or grid[x + 1, y] == 1) or (y + 1 > m or grid[x, y + 1] == 1):
-        valid_actions.remove(Action.SOUTH_EAST)
-    if (x - 1 < 0 or grid[x - 1, y] == 1) or (y - 1 < 0 or grid[x, y - 1] == 1):
+
+    if (x - 1 < 0 or y - 1 < 0) or grid[x - 1, y - 1] == 1:
         valid_actions.remove(Action.NORTH_WEST)
-    if (x + 1 > n or grid[x + 1, y] == 1) or (y - 1 < 0 or grid[x, y - 1] == 1):
+    if (x - 1 < 0 or y + 1 > m) or grid[x - 1, y + 1] == 1:
+        valid_actions.remove(Action.NORTH_EAST)
+    if (x + 1 > n or y - 1 < 0) or grid[x + 1, y - 1] == 1:
         valid_actions.remove(Action.SOUTH_WEST)
+    if (x + 1 > n or y + 1 > m) or grid[x + 1, y + 1] == 1:
+        valid_actions.remove(Action.SOUTH_EAST)
 
     return valid_actions
-
-
 def a_star(grid, h, start, goal):
 
     path = []
@@ -151,18 +146,15 @@ def a_star(grid, h, start, goal):
         print('Failed to find a path!')
         print('**********************') 
     return path[::-1], path_cost
-
-
-
 def heuristic(position, goal_position):
     return np.linalg.norm(np.array(position) - np.array(goal_position))
 def point(p):
     return np.array([p[0], p[1], 1.]).reshape(1, -1)
-
 def collinearity_check(p1, p2, p3, epsilon=1e-6):   
     m = np.concatenate((p1, p2, p3), 0)
     det = np.linalg.det(m)
-    return abs(det) < epsilon
+    """ Changed The value from epsilon to 5 so that points are not too close to each other"""
+    return abs(det) < 5.0#epsilon
 def prune_path(path):
     pruned_path = [p for p in path]
     # TODO: prune the path!
@@ -186,25 +178,11 @@ def prune_path(path):
         else:
             i += 1
     return pruned_path
-def can_connect(n1, n2):
-    l = LineString([n1, n2])
-    for p in polygons:
-        if p.crosses(l) and p.height >= min(n1[2], n2[2]):
-            return False
-    return True
-
-def create_graph(nodes, k):
-    g = nx.Graph()
-    tree = KDTree(nodes)
-    for n1 in nodes:
-        # for each node connect try to connect to k nearest nodes
-        idxs = tree.query([n1], k, return_distance=False)[0]
-        
-        for idx in idxs:
-            n2 = nodes[idx]
-            if n2 == n1:
-                continue
-                
-            if can_connect(n1, n2):
-                g.add_edge(n1, n2, weight=1)
-    return g
+def find_start_goal(skel, start, goal):
+    skel_cells = np.transpose(skel.nonzero())
+    start_min_dist = np.linalg.norm(np.array(start) - np.array(skel_cells), axis=1).argmin()
+    near_start = skel_cells[start_min_dist]
+    goal_min_dist = np.linalg.norm(np.array(goal) - np.array(skel_cells), axis=1).argmin()
+    near_goal = skel_cells[goal_min_dist]
+    
+    return near_start, near_goal
