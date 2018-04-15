@@ -149,7 +149,7 @@ class MotionPlanning(Drone):
                                                                          self.local_position))
         # Read in obstacle map
         data = np.loadtxt('colliders.csv', delimiter=',', dtype='Float64', skiprows=2)
-        
+        Zmax = np.max(data[:, 2] + data[:, 5])
         # Define a grid for a particular altitude and safety margin around obstacles
         """ Create grid comes from the planning_utils.py so we can call it directly here"""
         grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
@@ -186,19 +186,41 @@ class MotionPlanning(Drone):
         print(skel_start, skel_goal)
         """ a_star, heuristic come from the planning_utils.py so we can call it directly"""
         #path, _ = a_star(grid, heuristic, grid_start, grid_goal)
-        path, _ = a_star(invert(skeleton).astype(np.int), heuristic, tuple(skel_start), tuple(skel_goal))
+        path, _, FoundPath = a_star(invert(skeleton).astype(np.int), heuristic, tuple(skel_start), tuple(skel_goal))
+        while FoundPath == False:
+            # increase target altitude by 5 ft, get new skeeton and try again
+            TARGET_ALTITUDE += 5
+            print(TARGET_ALTITUDE)
+            self.target_position[2] = TARGET_ALTITUDE
+            grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
+            skeleton = medial_axis(invert(grid))
+            skel_start, skel_goal = find_start_goal(skeleton, grid_start, grid_goal)
+            path, _, FoundPath = a_star(invert(skeleton).astype(np.int), heuristic, tuple(skel_start), tuple(skel_goal))
+            if TARGET_ALTITUDE > 200:
+                break
         # TODO: prune path to minimize number of waypoints
         pruned_path = prune_path(path)
+ 
+
         """ Add the grid goal so that it can fly to the exact location"""
         pruned_path.append([grid_goal[0],grid_goal[1]])
 
         # TODO (if you're feeling ambitious): Try a different approach altogether!
         #add heading to all the waypoints
+        Path_with_heading = []
+        Path_with_heading.append([pruned_path[0][0],pruned_path[0][1],0])
         for i in range(0,len(pruned_path)-1):
-            pruned_path[i][3] = np.arctan2((pruned_path[i+1][1]-pruned_path[i][1]),(pruned_path[i+1][0]-pruned_path[i][0]))
-        # Convert path to waypoints
-        waypoints = [[p[0] + north_offset, p[1] + east_offset, TARGET_ALTITUDE, 0] for p in pruned_path]
-        #print (waypoints)
+            heading = np.arctan2((pruned_path[i+1][1]-pruned_path[i][1]),(pruned_path[i+1][0]-pruned_path[i][0]))
+            Path_with_heading.append([pruned_path[i+1][0],pruned_path[i+1][1],int(heading)])
+        if FoundPath == False:
+            # if path not found then takeoff and land on the spot
+            localpos = global_to_local(self.global_position,self.global_home)
+            waypoints = [[int(localpos[0]),int(localpos[1]),5,0],\
+                        [int(localpos[0]),int(localpos[1]),0,0]]
+        else:
+            # Convert path to waypoints
+            waypoints = [[int(p[0] + north_offset),int(p[1] + east_offset), TARGET_ALTITUDE,int(p[2])] for p in Path_with_heading]
+        print (waypoints)
         # Set self.waypoints
         self.waypoints = waypoints
         # TODO: send waypoints to sim (this is just for visualization of waypoints)

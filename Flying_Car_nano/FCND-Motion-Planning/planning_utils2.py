@@ -107,7 +107,7 @@ def a_star_NX(graph, heuristic, start, goal):
     """Modified A* to work with NetworkX graphs."""
     
     # TODO: complete
-
+    PathFound = False
     path = []
     queue = PriorityQueue()
     queue.put((0, start))
@@ -139,7 +139,7 @@ def a_star_NX(graph, heuristic, start, goal):
     path = []
     path_cost = 0
     if found:
-        
+        PathFound = True
         # retrace steps
         path = []
         n = goal
@@ -149,7 +149,7 @@ def a_star_NX(graph, heuristic, start, goal):
             n = branch[n][1]
         path.append(branch[n][1])
             
-    return path[::-1], path_cost
+    return path[::-1], path_cost, PathFound
 
 def heuristic(n1, n2):
     return LA.norm(np.array(n2) - np.array(n1))

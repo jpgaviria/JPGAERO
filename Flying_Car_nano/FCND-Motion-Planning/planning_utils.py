@@ -98,6 +98,7 @@ def valid_actions(grid, current_node):
     return valid_actions
 def a_star(grid, h, start, goal):
 
+    PathFound = False
     path = []
     path_cost = 0
     queue = PriorityQueue()
@@ -133,6 +134,7 @@ def a_star(grid, h, start, goal):
                     queue.put((queue_cost, next_node))
              
     if found:
+        PathFound = True
         # retrace steps
         n = goal
         path_cost = branch[n][0]
@@ -145,7 +147,7 @@ def a_star(grid, h, start, goal):
         print('**********************')
         print('Failed to find a path!')
         print('**********************') 
-    return path[::-1], path_cost
+    return path[::-1], path_cost, PathFound
 def heuristic(position, goal_position):
     return np.linalg.norm(np.array(position) - np.array(goal_position))
 def point(p):
