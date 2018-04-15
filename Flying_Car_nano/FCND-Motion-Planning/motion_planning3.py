@@ -15,6 +15,8 @@ from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection
 from udacidrone.messaging import MsgID
 from udacidrone.frame_utils import global_to_local
+#grid_goal_lat_lon = (-122.39966, 37.793593, 0)
+grid_goal_lat_lon_alt = (-122.39652, 37.79360, 15)
 
 
 class States(Enum):
@@ -50,7 +52,7 @@ class MotionPlanning(Drone):
             if -1.0 * self.local_position[2] > 0.95 * self.target_position[2]:
                 self.waypoint_transition()
         elif self.flight_state == States.WAYPOINT:
-            if np.linalg.norm(self.target_position[0:2] - self.local_position[0:2]) < 1.0:
+            if np.linalg.norm(self.target_position[0:2] - self.local_position[0:2]) < 5.0:
                 if len(self.waypoints) > 0:
                     self.waypoint_transition()
                 else:
@@ -59,8 +61,8 @@ class MotionPlanning(Drone):
 
     def velocity_callback(self):
         if self.flight_state == States.LANDING:
-            if self.global_position[2] - self.global_home[2] < 0.1:
-                if abs(self.local_position[2]) < 0.01:
+            if (self.global_position[2]-grid_goal_lat_lon_alt[2]) - self.global_home[2] < 0.1:
+                if abs(self.local_position[2]+grid_goal_lat_lon_alt[2]) < 0.1:
                     self.disarming_transition()
 
     def state_callback(self):
@@ -168,11 +170,17 @@ class MotionPlanning(Drone):
         #grid_goal = (-north_offset + 10, -east_offset + 10)
         # TODO: adapt to set goal as latitude / longitude position and convert
         """ code to get the grid goal based on LAT LONG position, assume altitude is 0 for goal"""
-        grid_goal_lat_lon = (-122.39966, 37.793593, 0)
-        #grid_goal_lat_lon = (-122.397185, 37.792857, 0)
-        grid_goal = global_to_local(grid_goal_lat_lon,self.global_home)
+        grid_goal = global_to_local(grid_goal_lat_lon_alt,self.global_home)
         grid_goal = tuple((int(grid_goal[0]-north_offset),int(grid_goal[1]-east_offset)))
         print(grid_start, grid_goal)
+        # if Altitude is not ground level adapt to new altitude
+        if grid_goal_lat_lon_alt[2] > TARGET_ALTITUDE:
+            TARGET_ALTITUDE = grid_goal_lat_lon_alt[2] + SAFETY_DISTANCE
+            self.target_position[2] = TARGET_ALTITUDE
+            #self.global_home[2] = grid_goal_lat_lon_alt[2]
+            grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
+            """ Using Medial-Axis solution for motion planning 3"""
+            skeleton = medial_axis(invert(grid))
         # Run A* to find a path from start to goal
         # TODO: add diagonal motions with a cost of sqrt(2) to your A* implementation 
         """ Done on Planning_utils.py """ 
@@ -196,7 +204,7 @@ class MotionPlanning(Drone):
             skeleton = medial_axis(invert(grid))
             skel_start, skel_goal = find_start_goal(skeleton, grid_start, grid_goal)
             path, _, FoundPath = a_star(invert(skeleton).astype(np.int), heuristic, tuple(skel_start), tuple(skel_goal))
-            if TARGET_ALTITUDE > 200:
+            if TARGET_ALTITUDE > 250:
                 break
         # TODO: prune path to minimize number of waypoints
         pruned_path = prune_path(path)
