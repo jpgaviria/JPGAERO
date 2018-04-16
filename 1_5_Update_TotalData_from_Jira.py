@@ -41,7 +41,7 @@ def Update_TotalData_from_Jira(VDD):
                 CRs[row] = CRs[row][:i]
             i+=1
     options = {'server': 'http://alm.rockwellcollins.com/issues/'}
-    jira = JIRA(options, basic_auth=('jpgaviri','Canada18*'))
+    jira = JIRA(options, basic_auth=('jpgaviri','PSWD*'))#Use RCI password
     # Get all projects viewable by anonymous users.
     projects = jira.projects()
     M145 = jira.project('GLOBALA')
