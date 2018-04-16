@@ -3,11 +3,11 @@ from shapely.geometry import Polygon, Point, LineString
 
 class Sampler():
 
-    def __init__(self, data):
+    def __init__(self, data, safety_distance):
         #super().__init__(connection)
 
         self.data = data
-        self._polygons = extract_polygons(data)
+        self._polygons = extract_polygons(data, safety_distance)
         self._xmin = 0
         self._xmax = 0
   
@@ -66,7 +66,7 @@ def collides(polygons, point):
         if p.contains(Point(point)) and height >= point[2]:
             return True
     return False 
-def extract_polygons(data):
+def extract_polygons(data, safety_distance):
 
     polygons = []
     for i in range(data.shape[0]):
@@ -74,19 +74,22 @@ def extract_polygons(data):
 
         # polygons.append(Polygon(coords))
         # TODO: Extract the 4 corners of the obstacle
-        p1 = (north - d_north,east + d_east)
-        p2 = (north + d_north,east + d_east)
-        p3 = (north + d_north,east - d_east)
-        p4 = (north - d_north,east - d_east)
-        # NOTE: The order of the points matters since
+        # p1 = (north - d_north-safety_distance,-east - d_east-safety_distance)
+        # p2 = (-north + d_north+safety_distance,-east - d_east-safety_distance)
+        # p3 = (-north + d_north+safety_distance,east - d_east-safety_distance)
+        # p4 = (north - d_north-safety_distance,east - d_east-safety_distance)
+        # # NOTE: The order of the points matters since
         # `shapely` draws the sequentially from point to point.
         #
         # If the area of the polygon is 0 you've likely got a weird
         # order.
-        corners = [p1,p2,p3,p4]
+        #corners = [p1,p2,p3,p4]
+        obstacle = [north - d_north- safety_distance, north + d_north+safety_distance, east - d_east-safety_distance,\
+                     east + d_east+ safety_distance]
+        corners = [(obstacle[0], obstacle[2]), (obstacle[0], obstacle[3]), (obstacle[1], obstacle[3]), (obstacle[1], obstacle[2])]
         
         # TODO: Compute the height of the polygon
-        height = alt + d_alt
+        height = alt + d_alt + safety_distance
 
         # TODO: Once you've defined corners, define polygons
         p = Polygon(corners)

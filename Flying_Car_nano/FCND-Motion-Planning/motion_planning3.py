@@ -16,8 +16,11 @@ from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection
 from udacidrone.messaging import MsgID
 from udacidrone.frame_utils import global_to_local
-#grid_goal_lat_lon = (-122.39966, 37.793593, 0)
-grid_goal_lat_lon_alt = (-122.39652, 37.79360, 15)
+#grid_goal_lat_lon_alt = (-122.39966, 37.793593, 0) # Californa avenue and front
+#grid_goal_lat_lon_alt = (-122.39652, 37.79360, 15) # On the roof
+#grid_goal_lat_lon_alt = (-122.39686, 37.79426, 0) # center of hollow small building
+grid_goal_lat_lon_alt = (-122.39629, 37.79244, 0) # center of hollow Tall building
+#grid_goal_lat_lon_alt = (-122.402273, 37.79741, 0) # center of C letter on hollow building far Away
 
 
 class States(Enum):
@@ -57,8 +60,10 @@ class MotionPlanning(Drone):
                 if len(self.waypoints) > 0:
                     self.waypoint_transition()
                 else:
-                    if np.linalg.norm(self.local_velocity[0:2]) < 1.0:
-                        self.landing_transition()
+                    # Be strict with the landing position to be accurate
+                    if np.linalg.norm(self.target_position[0:2] - self.local_position[0:2]) < 1.0:
+                        if np.linalg.norm(self.local_velocity[0:2]) < 1.0:
+                            self.landing_transition()
 
     def velocity_callback(self):
         if self.flight_state == States.LANDING:
@@ -166,10 +171,14 @@ class MotionPlanning(Drone):
         add it to grid center """
         Localcurrent = global_to_local(self.global_position,self.global_home)
         grid_start = (int(-grid_center[0]+Localcurrent[0]),int(-grid_center[1]+Localcurrent[1]))
-
+        #if local position is not at altitude 0, update the altitute for takeoff
+        if -Localcurrent[2] > TARGET_ALTITUDE:
+                    TARGET_ALTITUDE = int(TARGET_ALTITUDE -Localcurrent[2])
+                    self.target_position[2] = TARGET_ALTITUDE
         # Set goal as some arbitrary position on the grid
         #grid_goal = (-north_offset + 10, -east_offset + 10)
         # TODO: adapt to set goal as latitude / longitude position and convert
+        """ See global variable grid_lat_lon at the top of the file"""
         """ code to get the grid goal based on LAT LONG position, assume altitude is 0 for goal"""
         grid_goal = global_to_local(grid_goal_lat_lon_alt,self.global_home)
         grid_goal = tuple((int(grid_goal[0]-north_offset),int(grid_goal[1]-east_offset)))
@@ -198,7 +207,7 @@ class MotionPlanning(Drone):
         path, _, FoundPath = a_star(invert(skeleton).astype(np.int), heuristic, tuple(skel_start), tuple(skel_goal))
         while FoundPath == False:
             # increase target altitude by 5 ft, get new skeeton and try again
-            TARGET_ALTITUDE += 5
+            TARGET_ALTITUDE += 20
             print(TARGET_ALTITUDE)
             self.target_position[2] = TARGET_ALTITUDE
             grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
@@ -211,14 +220,30 @@ class MotionPlanning(Drone):
         pruned_path = prune_path(path)
         """ Add the grid goal so that it can fly to the exact location"""
         pruned_path.append([grid_goal[0],grid_goal[1]])
-        sampler = Sampler(data)
+        sampler = Sampler(data, SAFETY_DISTANCE)
         polygons = sampler._polygons
         #nodes = sampler.sample(200)
         #print(len(nodes))
+        # fig = plt.figure()
 
+        # plt.imshow(grid, cmap='Greys', origin='lower')
+
+        # nmin = np.min(data[:, 0])
+        # emin = np.min(data[:, 1])
+
+        # # draw points
+        # #all_pts = np.array(to_keep)
+        # # north_vals = all_pts[:,0]
+        # # east_vals = all_pts[:,1]
+        # # plt.scatter(east_vals - emin, north_vals - nmin, c='red')
+
+        # plt.ylabel('NORTH')
+        # plt.xlabel('EAST')
+
+        # plt.show()
         # Second Prunning to try to minimize waypoints by doing direct to
         # Also add Altitude
-        Path3D = get3DPath(pruned_path,TARGET_ALTITUDE,self.local_position[2],\
+        Path3D, TARGET_ALTITUDE = get3DPath(pruned_path,TARGET_ALTITUDE,self.local_position[2],\
                             grid_goal_lat_lon_alt[2],SAFETY_DISTANCE, polygons)
 
 

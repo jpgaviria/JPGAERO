@@ -204,20 +204,35 @@ def get3DPath(pruned_path,Cruise_Altitude,Takeoff_Altitude, Landing_Altitude, sa
     BestPath = False
     optimized = 1
     i=1    
-    while BestPath == False:
-            #num_of_waypoints = len(pruned_path)
-            if optimized ==0:
-                BestPath =True
-            else:
-                optimized = 0
-                if i+2 > len(pruned_path):
-                    continue                
-                elif can_connect(pruned_path[i],pruned_path[i+2],polygons):
-                    pruned_path.pop(i+1)
-                    i +=1
-                    optimized +=1
+    # while BestPath == False:
+    #         #num_of_waypoints = len(pruned_path)
+    #         if optimized ==0 and (i+2 >=len(pruned_path)):
+    #             BestPath =True
+    #         else:
+    #             optimized = 0
+    #             if (i+2>=len(pruned_path)):
+    #                 i=1
+    #             if (i+2<len(pruned_path)):
+    #                 n1 = [pruned_path[i][0],pruned_path[i][1],Cruise_Altitude]
+    #                 n2 = [pruned_path[i+2][0],pruned_path[i+2][1],Cruise_Altitude]
+    #                 if can_connect(n1, n2,polygons):
+    #                     pruned_path.pop(i+1)
+    #                     optimized +=1
+    #             i+=1
     for p in pruned_path:
-        Path3D.append(p[0],p[1],Cruise_Altitude)
-    # get the number of waypints
-
-    return Path3D
+        Path3D.append([p[0],p[1],Cruise_Altitude])
+    # get the number of waypoints
+    #for the last point, confirm if it's safe to fly from the skeleton goal to the grid goal, 
+    # go higher until is possible
+    PathFound = False
+    # while PathFound == False:
+    #     n1 = Path3D[-2]
+    #     n2 = Path3D[-1]
+    #     if  can_connect(n1, n2,polygons):
+    #         PathFound = True
+    #     else:
+    #         Cruise_Altitude +=20
+    #         print (Cruise_Altitude)
+    #         Path3D[-2][2] = Cruise_Altitude
+    #         Path3D[-1][2] = Cruise_Altitude
+    return Path3D, Cruise_Altitude
