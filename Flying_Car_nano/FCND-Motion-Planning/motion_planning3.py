@@ -16,11 +16,14 @@ from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection
 from udacidrone.messaging import MsgID
 from udacidrone.frame_utils import global_to_local
+
+UseLatLonAlt = True
 #grid_goal_lat_lon_alt = (-122.39966, 37.793593, 0) # Californa avenue and front
 #grid_goal_lat_lon_alt = (-122.39652, 37.79360, 15) # On the roof
 #grid_goal_lat_lon_alt = (-122.39686, 37.79426, 0) # center of hollow small building
 grid_goal_lat_lon_alt = (-122.39629, 37.79244, 0) # center of hollow Tall building
-#grid_goal_lat_lon_alt = (-122.402273, 37.79741, 0) # center of C letter on hollow building far Away
+#grid_goal_lat_lon_alt = (-122.402273, 37.79741, 0) # cloce to C letter on hollow building far Away north west
+#grid_goal_lat_lon_alt = (-122.392300, 37.791315, 0) # Spear St Plaza behind building far Away south east
 
 
 class States(Enum):
@@ -61,7 +64,7 @@ class MotionPlanning(Drone):
                     self.waypoint_transition()
                 else:
                     # Be strict with the landing position to be accurate
-                    if np.linalg.norm(self.target_position[0:2] - self.local_position[0:2]) < 1.0:
+                    if np.linalg.norm(self.target_position[0:2] - self.local_position[0:2]) < 0.5:
                         if np.linalg.norm(self.local_velocity[0:2]) < 1.0:
                             self.landing_transition()
 
@@ -176,21 +179,25 @@ class MotionPlanning(Drone):
                     TARGET_ALTITUDE = int(TARGET_ALTITUDE -Localcurrent[2])
                     self.target_position[2] = TARGET_ALTITUDE
         # Set goal as some arbitrary position on the grid
-        #grid_goal = (-north_offset + 10, -east_offset + 10)
-        # TODO: adapt to set goal as latitude / longitude position and convert
-        """ See global variable grid_lat_lon at the top of the file"""
-        """ code to get the grid goal based on LAT LONG position, assume altitude is 0 for goal"""
-        grid_goal = global_to_local(grid_goal_lat_lon_alt,self.global_home)
-        grid_goal = tuple((int(grid_goal[0]-north_offset),int(grid_goal[1]-east_offset)))
-        print(grid_start, grid_goal)
-        # if Altitude is not ground level adapt to new altitude
-        if grid_goal_lat_lon_alt[2] > TARGET_ALTITUDE:
-            TARGET_ALTITUDE = grid_goal_lat_lon_alt[2] + SAFETY_DISTANCE
-            self.target_position[2] = TARGET_ALTITUDE
-            #self.global_home[2] = grid_goal_lat_lon_alt[2]
-            grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
-            """ Using Medial-Axis solution for motion planning 3"""
-            skeleton = medial_axis(invert(grid))
+        if UseLatLonAlt == False:
+            grid_goal = (-north_offset + Localcurrent[0] + 10, -east_offset +Localcurrent[1] + 10)
+            print ("using grid position for the goal")
+        else:
+            print ("using Lat, Lon, Alt position for the goal")
+            # TODO: adapt to set goal as latitude / longitude position and convert
+            """ See global variable grid_lat_lon at the top of the file"""
+            """ code to get the grid goal based on LAT LONG position, assume altitude is 0 for goal"""
+            grid_goal = global_to_local(grid_goal_lat_lon_alt,self.global_home)
+            grid_goal = tuple((int(grid_goal[0]-north_offset),int(grid_goal[1]-east_offset)))
+            print(grid_start, grid_goal)
+            # if Altitude is not ground level adapt to new altitude
+            if grid_goal_lat_lon_alt[2] > TARGET_ALTITUDE:
+                TARGET_ALTITUDE = grid_goal_lat_lon_alt[2] + SAFETY_DISTANCE
+                self.target_position[2] = TARGET_ALTITUDE
+                #self.global_home[2] = grid_goal_lat_lon_alt[2]
+                grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
+                """ Using Medial-Axis solution for motion planning 3"""
+                skeleton = medial_axis(invert(grid))
         # Run A* to find a path from start to goal
         # TODO: add diagonal motions with a cost of sqrt(2) to your A* implementation 
         """ Done on Planning_utils.py """ 
@@ -208,6 +215,7 @@ class MotionPlanning(Drone):
         while FoundPath == False:
             # increase target altitude by 5 ft, get new skeeton and try again
             TARGET_ALTITUDE += 20
+            print ("TRY AGAIN, NEW CRUISE ALTITUDE")
             print(TARGET_ALTITUDE)
             self.target_position[2] = TARGET_ALTITUDE
             grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)

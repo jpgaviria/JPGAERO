@@ -24,11 +24,6 @@
 
 You're reading it! Below I describe how I addressed each rubric point and where in my code each point is handled.
 
-### Explain the Starter Code
-
-#### 1. Explain the functionality of what's provided in `motion_planning.py` and `planning_utils.py`
-These scripts contain a basic planning implementation that includes...
-
 And here's a lovely image of my results (ok this image has nothing to do with it, but it's a nice example of how to include images in your writeup!)
 ![Top Down View](./misc/high_up.png)
 
@@ -39,8 +34,43 @@ Here's | A | Snappy | Table
 3 | *italic* | text | 403
 4 | 2 | 3 | abcd
 
+
+
+### Explain the Starter Code
+
+#### 1. Explain the functionality of what's provided in `motion_planning.py` and `planning_utils.py`
+**MOTION_PLANNING.PY**
+Motion Planning is a similar to backyard flyie, except that now there is a new state called PLANNING, this state is called
+after ARMING and before TAKEOFF state and it serves as a state to calculate the complete route before taking off 
+
+There is also a new fuction that sends the waypoints for visualization to the simulator called send_waypoints()
+
+Function plan_path() is the one responsible to to plan the entire trip for the drone
+
+**PLANNING_UTILS.PY**
+This module contains basic functions to help us plan the mission, this saves us from having to implement all common functions for planning a flight, now we can just import functions from planning_utils.py
+I added some other functions to this module, I added prune_path, find_start_goal, a_star and get3DPath
+
 ### Implementing Your Path Planning Algorithm
-I tried 3 methods, the original from the excercise that is used in motion_planning.py, using probabilistic method in motion_planning2.py and using medial-axis on motion_planning3.py. The method that worked the best was medial-axis, it's fast, safe and always works.
+I tried 3 different of methods: 
+**motion_planner.py:** This is the original from the excercise that is used in motion_planning.py, it was memory intensive so I discarded it quickly, it was also not safe as it will find a path very close to buildings.
+**motion_planner2.py:** This method was using probabilistic method, I created the sampler class and I found this method to be complicated, in order to be able to get a path I needed to have aroound 300 sample points and it will not always find a path, it was also very memory intensive and slow
+**motion_planner3.py:** This method I used medial-axis. This provided me a very safe path and very quick planning method. Knowing I was on the safest path it allowed me to relax the tolerances on the prune_path function and also between waypoints, the drone is able to travel very fast between 2 places on the grid.
+To be able to go from anywhere to anywhere on the grid I created a replanning function that in case a path is not possible then just add 20 meters to the cruise altitude, find a new skeleton and try a_star again, this enabled me to make a 3D planning function that will always work, the drone is able to land on the roof of buildings, even in Hollow buildings.
+Something I really Appreciated of medial axis is that it creates safe airways at different altitudes, similar to how aircraft fly between cities int he world.
+I tried to implement a function in planning utils to see if I could prune the path even more by checking if I can go direct-to from waypoint i to waypoint i+2 then pop waypoint i+1, it seemed to work sometimes, but I had issues with the function to check if a line crosses a polygon, sometimes it would just let me crash into buildings.
+
+At the end, my motion_planner3.py is the best method, quick, efficient and safe.
+
+here are some snaopshots of plans going from all places in the map
+
+![Top Down View](./misc/Capture1.png)
+![Top Down View](./misc/Capture2.png)
+![Top Down View](./misc/Capture3.png)
+![Top Down View](./misc/Capture4.png)
+![Top Down View](./misc/Capture5.png)
+![Top Down View](./misc/Capture6.png)
+
 
 
 #### 1. Set your global home position
