@@ -64,12 +64,12 @@ At the end, my motion_planner3.py is the best method, quick, efficient and safe.
 
 here are some snaopshots of plans going from all places in the map
 
-![Top Down View](./misc/Capture1.png)
-![Top Down View](./misc/Capture2.png)
-![Top Down View](./misc/Capture3.png)
-![Top Down View](./misc/Capture4.png)
-![Top Down View](./misc/Capture5.png)
-![Top Down View](./misc/Capture6.png)
+![Top Down View](./misc/Capture1.PNG)
+![Top Down View](./misc/Capture2.PNG)
+![Top Down View](./misc/Capture3.PNG)
+![Top Down View](./misc/Capture4.PNG)
+![Top Down View](./misc/Capture5.PNG)
+![Top Down View](./misc/Capture6.PNG)
 
 
 
