@@ -148,7 +148,7 @@ class MotionPlanning(Drone):
         data = np.loadtxt('colliders.csv', delimiter=',', dtype='Float64', skiprows=2)
         
         # Define a grid for a particular altitude and safety margin around obstacles
-        #""" Create grid comes from the planning_utils.py so we can call it directly here"""
+        """ Create grid comes from the planning_utils.py so we can call it directly here"""
         grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
         print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
         # Define starting point on the grid (this is just grid center)
@@ -174,7 +174,7 @@ class MotionPlanning(Drone):
         # or move to a different search space such as a graph (not done here)
         print('Local Start and Goal: ', grid_start, grid_goal)
         """ a_star, heuristic come from the planning_utils.py so we can call it directly"""
-        path, _ = a_star(grid, heuristic, grid_start, grid_goal)
+        path, _, FoundPath = a_star(grid, heuristic, grid_start, grid_goal)
         # TODO: prune path to minimize number of waypoints
         pruned_path = prune_path(path)
         """ Add the grid goal so that it can fly to the exact location"""
@@ -184,7 +184,6 @@ class MotionPlanning(Drone):
 
         # Convert path to waypoints
         waypoints = [[p[0] + north_offset, p[1] + east_offset, TARGET_ALTITUDE, 0] for p in pruned_path]
-        #print (waypoints)
         # Set self.waypoints
         self.waypoints = waypoints
         # TODO: send waypoints to sim (this is just for visualization of waypoints)

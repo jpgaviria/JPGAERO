@@ -4,7 +4,7 @@ import msgpack #""" NEW library in motion planning """
 from enum import Enum, auto
 
 import numpy as np
-#import pandas as pd
+
 import csv
 from skimage.morphology import medial_axis
 from skimage.util import invert
@@ -230,31 +230,10 @@ class MotionPlanning(Drone):
         pruned_path.append([grid_goal[0],grid_goal[1]])
         sampler = Sampler(data, SAFETY_DISTANCE)
         polygons = sampler._polygons
-        #nodes = sampler.sample(200)
-        #print(len(nodes))
-        # fig = plt.figure()
-
-        # plt.imshow(grid, cmap='Greys', origin='lower')
-
-        # nmin = np.min(data[:, 0])
-        # emin = np.min(data[:, 1])
-
-        # # draw points
-        # #all_pts = np.array(to_keep)
-        # # north_vals = all_pts[:,0]
-        # # east_vals = all_pts[:,1]
-        # # plt.scatter(east_vals - emin, north_vals - nmin, c='red')
-
-        # plt.ylabel('NORTH')
-        # plt.xlabel('EAST')
-
-        # plt.show()
         # Second Prunning to try to minimize waypoints by doing direct to
         # Also add Altitude
         Path3D, TARGET_ALTITUDE = get3DPath(pruned_path,TARGET_ALTITUDE,self.local_position[2],\
                             grid_goal_lat_lon_alt[2],SAFETY_DISTANCE, polygons)
-
-
 
         # TODO (if you're feeling ambitious): Try a different approach altogether!
         #add heading to all the waypoints
