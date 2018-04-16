@@ -24,23 +24,11 @@
 
 You're reading it! Below I describe how I addressed each rubric point and where in my code each point is handled.
 
-And here's a lovely image of my results (ok this image has nothing to do with it, but it's a nice example of how to include images in your writeup!)
-![Top Down View](./misc/high_up.png)
-
-Here's | A | Snappy | Table
---- | --- | --- | ---
-1 | `highlight` | **bold** | 7.41
-2 | a | b | c
-3 | *italic* | text | 403
-4 | 2 | 3 | abcd
-
-
-
 ### Explain the Starter Code
 
 #### 1. Explain the functionality of what's provided in `motion_planning.py` and `planning_utils.py`
 **MOTION_PLANNING.PY**
-Motion Planning is a similar to backyard flyie, except that now there is a new state called PLANNING, this state is called
+Motion Planning is a similar to backyard flyier, except that now there is a new state called PLANNING, this state is called
 after ARMING and before TAKEOFF state and it serves as a state to calculate the complete route before taking off 
 
 There is also a new fuction that sends the waypoints for visualization to the simulator called send_waypoints()
@@ -57,19 +45,19 @@ I tried 3 different of methods:
 **motion_planner2.py:** This method was using probabilistic method, I created the sampler class and I found this method to be complicated, in order to be able to get a path I needed to have aroound 300 sample points and it will not always find a path, it was also very memory intensive and slow
 **motion_planner3.py:** This method I used medial-axis. This provided me a very safe path and very quick planning method. Knowing I was on the safest path it allowed me to relax the tolerances on the prune_path function and also between waypoints, the drone is able to travel very fast between 2 places on the grid.
 To be able to go from anywhere to anywhere on the grid I created a replanning function that in case a path is not possible then just add 20 meters to the cruise altitude, find a new skeleton and try a_star again, this enabled me to make a 3D planning function that will always work, the drone is able to land on the roof of buildings, even in Hollow buildings.
-Something I really Appreciated of medial axis is that it creates safe airways at different altitudes, similar to how aircraft fly between cities int he world.
+Something I really Appreciated of medial axis is that it creates safe airways at different altitudes, similar to how aircraft fly between cities in the world.
 I tried to implement a function in planning utils to see if I could prune the path even more by checking if I can go direct-to from waypoint i to waypoint i+2 then pop waypoint i+1, it seemed to work sometimes, but I had issues with the function to check if a line crosses a polygon, sometimes it would just let me crash into buildings.
 
 At the end, my **motion_planner3.py** is the best method, quick, efficient and safe.
 
-here are some snaopshots of plans going from all places in the map
+here are some snapshots of plans going from all places in the map
 
-![Top Down View](./misc/Capture1.PNG)
-![Top Down View](./misc/Capture2.PNG)
-![Top Down View](./misc/Capture3.PNG)
-![Top Down View](./misc/Capture4.PNG)
-![Top Down View](./misc/Capture5.PNG)
-![Top Down View](./misc/Capture6.PNG)
+![Drone Flying over SF](./misc/Capture1.PNG)
+![Drone Flying over SF](./misc/Capture2.PNG)
+![Drone Flying over SF](./misc/Capture3.PNG)
+![Drone Flying over SF](./misc/Capture4.PNG)
+![Drone Flying over SF](./misc/Capture5.PNG)
+![Drone Flying over SF](./misc/Capture6.PNG)
 
 
 
@@ -104,7 +92,7 @@ Localcurrent = global_to_local(self.global_position,self.global_home)
 - Get the new grid start position, add grid center position to the new local position
 grid_start = (int(-grid_center[0]+Localcurrent[0]),int(-grid_center[1]+Localcurrent[1]))
 -Added the code below in case I'm taking off from a Building, therefore the cruise altitude is higher
-#if local position is not at altitude 0, update the altitute for takeoff
+If local position is not at altitude 0, update the altitute for takeoff
 if -Localcurrent[2] > TARGET_ALTITUDE:
             TARGET_ALTITUDE = int(TARGET_ALTITUDE -Localcurrent[2])
             self.target_position[2] = TARGET_ALTITUDE
@@ -118,7 +106,7 @@ This step is to add flexibility to the desired goal location. Should be able to 
 grid_goal = global_to_local(grid_goal_lat_lon_alt,self.global_home)
 - add the north and east offset from the center to determine the true local goal position with respect to grid center.
 grid_goal = tuple((int(grid_goal[0]-north_offset),int(grid_goal[1]-east_offset)))
-
+![Drone Flying over SF](./misc/Capture7.PNG)
 
 #### 5. Modify A* to include diagonal motion (or replace A* altogether)
 Minimal requirement here is to modify the code in planning_utils() to update the A* implementation to include diagonal motions on the grid that have a cost of sqrt(2), but more creative solutions are welcome. Explain the code you used to accomplish this step.
@@ -157,4 +145,16 @@ For an extra challenge, consider implementing some of the techniques described i
 
 I tried implementing Probablistic method in motion_planning2.py to be able to fly in 3D, but I found it to be really expensive in terms of computational power, and I did not get a consistent path, instead I created a medial axis method adapter to a 3D world and found it to be expremely fast and safe, that allowed me to relax the tolerances on the prune_path function as well as on the  flight state
 
+
+
+
+And here's a lovely image of my results (ok this image has nothing to do with it, but it's a nice example of how to include images in your writeup!)
+![Top Down View](./misc/high_up.png)
+
+Here's | A | Snappy | Table
+--- | --- | --- | ---
+1 | `highlight` | **bold** | 7.41
+2 | a | b | c
+3 | *italic* | text | 403
+4 | 2 | 3 | abcd
 
