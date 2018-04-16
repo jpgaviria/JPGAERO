@@ -40,9 +40,12 @@ This module contains basic functions to help us plan the mission, this saves us 
 I added some other functions to this module, I added prune_path, find_start_goal, a_star and get3DPath
 
 ### Implementing Your Path Planning Algorithm
-I tried 3 different of methods: 
+I tried 3 different of methods:
+
 **motion_planner.py:** This is the original from the excercise that is used in motion_planning.py, it was memory intensive so I discarded it quickly, it was also not safe as it will find a path very close to buildings.
+
 **motion_planner2.py:** This method was using probabilistic method, I created the sampler class and I found this method to be complicated, in order to be able to get a path I needed to have aroound 300 sample points and it will not always find a path, it was also very memory intensive and slow
+
 **motion_planner3.py:** This method I used medial-axis. This provided me a very safe path and very quick planning method. Knowing I was on the safest path it allowed me to relax the tolerances on the prune_path function and also between waypoints, the drone is able to travel very fast between 2 places on the grid.
 To be able to go from anywhere to anywhere on the grid I created a replanning function that in case a path is not possible then just add 20 meters to the cruise altitude, find a new skeleton and try a_star again, this enabled me to make a 3D planning function that will always work, the drone is able to land on the roof of buildings, even in Hollow buildings.
 Something I really Appreciated of medial axis is that it creates safe airways at different altitudes, similar to how aircraft fly between cities in the world.
@@ -66,16 +69,26 @@ Here students should read the first line of the csv file, extract lat0 and lon0 
 
 Not the cleanest of ways, but got what I needed, I read the entire csv using csv.reader function, extracted first line
 then I deleted lat lon and spaces then converted the numbers from the string to float
+
 **probably the np.genfromtxt fuction could have done this, but I was not able**
 to find the way, used csv.reader to get it
+
 latlondata = csv.reader(open('colliders.csv', newline=''), delimiter=',')
+
 for row in latlondata:
+
     lat0, lon0 = row[:2]
+
     break
+
 lat0 = lat0.replace("lat0 ","")
+
 lon0 = lon0.replace(" lon0 ","")
+
 lat0 = float(lat0)
+
 lon0 = float(lon0)
+
 
 #### 2. Set your current local position
 Here as long as you successfully determine your local position relative to global home you'll be all set. Explain briefly how you accomplished this in your code.
@@ -101,7 +114,6 @@ if -Localcurrent[2] > TARGET_ALTITUDE:
 This step is to add flexibility to the desired goal location. Should be able to choose any (lat, lon) within the map and have it rendered to a goal location on the grid.
 - Added a global variable: UseLatLonAlt to be able to select if I want local or global position goal.
 - Also added grid_goal_lat_lon_alt global variable to easily be able to select different goal positions on the map
-""" See global variable grid_lat_lon at the top of the file"""
 - get goal local position using the global_to_local function
 grid_goal = global_to_local(grid_goal_lat_lon_alt,self.global_home)
 - add the north and east offset from the center to determine the true local goal position with respect to grid center.
@@ -110,20 +122,30 @@ grid_goal = tuple((int(grid_goal[0]-north_offset),int(grid_goal[1]-east_offset))
 
 #### 5. Modify A* to include diagonal motion (or replace A* altogether)
 Minimal requirement here is to modify the code in planning_utils() to update the A* implementation to include diagonal motions on the grid that have a cost of sqrt(2), but more creative solutions are welcome. Explain the code you used to accomplish this step.
+
 On the planning_utils.py Action Class, added the following actions and defined the cost as sqrt(2)
 """ Added diagonal motions with a cost os square root of 2"""
+
 **NORTH_WEST = (-1, -1, np.sqrt(2))**
+
 **NORTH_EAST = (-1, 1, np.sqrt(2))**
+
 **SOUTH_WEST = (1, -1, np.sqrt(2))**
+
 **SOUTH_EAST = (1, 1, np.sqrt(2))**
 
+
 On the valid actions function added the following code to qualify if the diagonal action is valid
+
 **if (x - 1 < 0 or y - 1 < 0) or grid[x - 1, y - 1] == 1:**
     **valid_actions.remove(Action.NORTH_WEST)**
+
 **if (x - 1 < 0 or y + 1 > m) or grid[x - 1, y + 1] == 1:**
     **valid_actions.remove(Action.NORTH_EAST)**
+
 **if (x + 1 > n or y - 1 < 0) or grid[x + 1, y - 1] == 1:**
     **valid_actions.remove(Action.SOUTH_WEST)**
+
 **if (x + 1 > n or y + 1 > m) or grid[x + 1, y + 1] == 1:**
     **valid_actions.remove(Action.SOUTH_EAST)**
 
@@ -135,7 +157,7 @@ For this step you can use a collinearity test or ray tracing method like Bresenh
 
 ### Execute the flight
 #### 1. Does it work?
-It works!
+It works great!
 
 ### Double check that you've met specifications for each of the [rubric](https://review.udacity.com/#!/rubrics/1534/view) points.
   
