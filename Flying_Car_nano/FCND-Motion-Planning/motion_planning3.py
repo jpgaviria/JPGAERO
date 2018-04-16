@@ -10,7 +10,8 @@ from skimage.morphology import medial_axis
 from skimage.util import invert
 import matplotlib.pyplot as plt
 
-from planning_utils import heuristic, create_grid, prune_path, find_start_goal, a_star
+from planning_utils import heuristic, create_grid, prune_path, find_start_goal, a_star, get3DPath
+from sampling import Sampler
 from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection
 from udacidrone.messaging import MsgID
@@ -204,22 +205,31 @@ class MotionPlanning(Drone):
             skeleton = medial_axis(invert(grid))
             skel_start, skel_goal = find_start_goal(skeleton, grid_start, grid_goal)
             path, _, FoundPath = a_star(invert(skeleton).astype(np.int), heuristic, tuple(skel_start), tuple(skel_goal))
-            if TARGET_ALTITUDE > 250:
+            if TARGET_ALTITUDE > Zmax:
                 break
         # TODO: prune path to minimize number of waypoints
         pruned_path = prune_path(path)
- 
-
         """ Add the grid goal so that it can fly to the exact location"""
         pruned_path.append([grid_goal[0],grid_goal[1]])
+        sampler = Sampler(data)
+        polygons = sampler._polygons
+        #nodes = sampler.sample(200)
+        #print(len(nodes))
+
+        # Second Prunning to try to minimize waypoints by doing direct to
+        # Also add Altitude
+        Path3D = get3DPath(pruned_path,TARGET_ALTITUDE,self.local_position[2],\
+                            grid_goal_lat_lon_alt[2],SAFETY_DISTANCE, polygons)
+
+
 
         # TODO (if you're feeling ambitious): Try a different approach altogether!
         #add heading to all the waypoints
         Path_with_heading = []
-        Path_with_heading.append([pruned_path[0][0],pruned_path[0][1],0])
-        for i in range(0,len(pruned_path)-1):
-            heading = np.arctan2((pruned_path[i+1][1]-pruned_path[i][1]),(pruned_path[i+1][0]-pruned_path[i][0]))
-            Path_with_heading.append([pruned_path[i+1][0],pruned_path[i+1][1],int(heading)])
+        Path_with_heading.append([Path3D[0][0],Path3D[0][1],0])
+        for i in range(0,len(Path3D)-1):
+            heading = np.arctan2((Path3D[i+1][1]-Path3D[i][1]),(Path3D[i+1][0]-Path3D[i][0]))
+            Path_with_heading.append([Path3D[i+1][0],Path3D[i+1][1],int(heading)])
         if FoundPath == False:
             # if path not found then takeoff and land on the spot
             localpos = global_to_local(self.global_position,self.global_home)

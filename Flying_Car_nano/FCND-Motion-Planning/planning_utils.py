@@ -1,6 +1,8 @@
 from enum import Enum
 from queue import PriorityQueue
 import numpy as np
+from sklearn.neighbors import KDTree
+from shapely.geometry import Polygon, Point, LineString
 
 def create_grid(data, drone_altitude, safety_distance):
     """
@@ -188,3 +190,34 @@ def find_start_goal(skel, start, goal):
     near_goal = skel_cells[goal_min_dist]
     
     return near_start, near_goal
+def can_connect(n1, n2, polygons):
+    l = LineString([n1, n2])
+    for p in polygons:
+        if p[0].crosses(l) and p[1] >= min(n1[2], n2[2]):
+            return False
+    return True
+def get3DPath(pruned_path,Cruise_Altitude,Takeoff_Altitude, Landing_Altitude, safety_distance,polygons):
+    Path3D = []
+    Grid_start = pruned_path[0]
+    grid_goal = pruned_path[-1]
+    Path3D.append([Grid_start[0],Grid_start[1],Takeoff_Altitude])
+    BestPath = False
+    optimized = 1
+    i=1    
+    while BestPath == False:
+            #num_of_waypoints = len(pruned_path)
+            if optimized ==0:
+                BestPath =True
+            else:
+                optimized = 0
+                if i+2 > len(pruned_path):
+                    continue                
+                elif can_connect(pruned_path[i],pruned_path[i+2],polygons):
+                    pruned_path.pop(i+1)
+                    i +=1
+                    optimized +=1
+    for p in pruned_path:
+        Path3D.append(p[0],p[1],Cruise_Altitude)
+    # get the number of waypints
+
+    return Path3D
