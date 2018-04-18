@@ -5,7 +5,7 @@ import matplotlib.pylab as pylab
 #import jdc
 from ExerciseAnswers import Answers
 
-pylab.rcParams['figure.figsize'] = 10, 10
+pylab.rcParams['figure.figsize'] = 8, 8
 
 class Drone2D:
     
@@ -38,17 +38,21 @@ class Drone2D:
         #  (self.X) of the vehicle all at once using
         #  a technique similar to what you saw in the
         #  previous example for the 1D drone.
-
+       
         X_dot = np.array([
-            self.X[0], #z
-            self.X[1], #y
-            self.X[2], #phi
             self.X[3], #z_dot
             self.X[4], #y_dot
-            self.X[5] #phi_dot
+            self.X[5], #phi_dot
+            self.g, #z_dot_dot
+            0,
+            0
         ])
-        delta_X = X_dot * dt
-        self.X = self.X + delta_X
+
+        #delta_X_dot = X_dot_dot * dt
+        #X_dot = X_dot + delta_X_dot
+
+        #delta_X = X_dot * dt
+        self.X = self.X + X_dot*dt
         
         return self.X
 
