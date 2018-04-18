@@ -9,7 +9,9 @@ import datetime
 #import math
 #from docx import Document
 import docx
-oldVDDpath = "VDD_2018-03-22-1248.xlsx"
+from jira import JIRA
+import os
+oldVDDpath = "VDD_generator_M145_V5_5_1_Delivery_JIRA Systems and Domains 4-17-2018.xlsx"
 newVDDpath = "VDD_generator_M185_V5_5_1_Cert - 23 March 2018.xlsx"
 SoftwareVersion  = "V5.5.0"
 SoftwareVersion2  = "V5.5.1"
@@ -17,6 +19,106 @@ DocsVersion1 = "V5.5.0 Docs"
 DocsVersion2 = "V5.5.1 Docs"
 DocsVersion3 = "V5.5 Black Label Docs"
 NewVDDdate  =   datetime.datetime(2018,3,23)
+os.chdir('C:\\Users\jpgaviri\iCloudDrive\Personal\Python\VDD_Management')
+#----------------------------------------------------------------------------
+def Get_Update_from_Jira(TotalData):
+    print ("Fetching updates form Jira, make sure you are on the RCI network and set the password on the script")
+
+    NumRows = len(TotalData)
+    CRs = ['' for x in range(NumRows)]
+    NumColumn = len(TotalData[0])
+    print(NumColumn)
+    for row in range(0,NumRows):
+        TotalData[row].insert(0,'Jira')
+    NumColumn = len(TotalData[0])
+    print(NumColumn)
+
+    for row in range(0,NumRows):
+        CRs[row] = str(TotalData[row][8])
+    # cleanup list of CRs so that only 1 CR per
+    for row in range(1,len(CRs)):
+        i=0
+        for char in CRs[row]:
+            if char == '\n':
+                CRs[row] = CRs[row][:i]
+            elif char == 'O' and CRs[row][i:i+3] == 'OMS' and i>3:
+                CRs[row] = CRs[row][:i]
+            elif char == 'I' and CRs[row][i:i+4] == 'IFIS' and i>3:
+                CRs[row] = CRs[row][:i]
+            elif char == 'E' and CRs[row][i:i+5] == 'EICAS' and i>3:
+                CRs[row] = CRs[row][:i]
+            elif char == 'F' and CRs[row][i:i+4] == 'FDSA' and i>3:
+                CRs[row] = CRs[row][:i]
+            i+=1
+    options = {'server': 'http://alm.rockwellcollins.com/issues/'}
+    jira = JIRA(options, basic_auth=('jpgaviri','Canada18*'))#Use RCI password
+
+    i=0
+    for CR in CRs:
+        if CR != '' and CR != 'CRID' and CR != 'GLOBALA-XXXX' and CR != 'Globala-XXX' and CR != 'GLOBALA-TBD':
+            Wp_type, summary, description, function, fix_version, affected_projects,labels, \
+            Operational_impact,Plain_English,Criticality = '','','','','','','','','',''
+            if CR[:6] == 'GLOBAL':
+                issue = jira.issue(str(CR))
+                print (CR)
+                Wp_type, summary, description, function, fix_version, affected_projects,labels, \
+                Operational_impact,Plain_English,Criticality = '','','','','','','','','',''
+                for field in issue.raw['fields']:
+                    if field == 'customfield_12909':
+                        if issue.raw['fields']['customfield_12909'] != None:
+                            Wp_type = issue.raw['fields']['customfield_12909']['value']
+                    if field == 'summary':
+                        if issue.raw['fields']['summary'] != None:
+                            summary = issue.raw['fields']['summary']
+                    if field == 'description':
+                        if issue.raw['fields']['description'] != None:
+                            description = issue.raw['fields']['description']
+                    if field == 'customfield_19307':
+                        if issue.raw['fields']['customfield_19307'] != None:
+                            function = issue.raw['fields']['customfield_19307']['value']
+                    if field == 'fixVersions':
+                        if issue.raw['fields']['fixVersions'] != []:
+                            fix_version = issue.raw['fields']['fixVersions'][0]['name']
+                    if field == 'customfield_13705':
+                        if issue.raw['fields']['customfield_13705'] != None:
+                            affected_projects = issue.raw['fields']['customfield_13705']
+                    if field == 'labels':
+                        if issue.raw['fields']['labels'] != None:
+                            labels = issue.raw['fields']['labels']
+                    if field == 'customfield_12906':
+                        if issue.raw['fields']['customfield_12906'] != None:
+                            Operational_impact = issue.raw['fields']['customfield_12906']
+                    if field == 'customfield_18527':
+                        if issue.raw['fields']['customfield_18527'] != None:
+                            Plain_English = issue.raw['fields']['customfield_18527']
+                    if field == 'customfield_13514':
+                        if issue.raw['fields']['customfield_13514'] != []:
+                            Criticality = issue.raw['fields']['customfield_13514'][0]
+                #last_update = issue.raw['fields']['customfield_19063']
+                print ("this seems to have worked")
+                label = ''
+                if labels != '':
+                    for l in labels: 
+                        label = label + ', ' + str(l)
+                label = str(label)
+
+                TotalData[i][0] = 'CR NUmber: ' + str(issue.key) + '\n' \
+                                    'Work Package Type: ' + str(Wp_type) + '\n' \
+                                    + 'Fix Version: '+ str(fix_version) +'\n' \
+                                    + 'Labels: '+ str(label) + '\n' \
+                                    + 'Summary: ' + str(summary) + '\n' \
+                                    + 'Operational Impact: '+ str(Operational_impact) +'\n' \
+                                    + 'English Description: '+ str(Plain_English) +'\n' \
+                                    + 'Description: ' + str(description) +'\n'
+                #AllM145Issues[i][1].value = issue.key
+                i+=1
+            else:
+                i+=1
+        else:
+            i+=1
+    return TotalData
+
+
 #-----------------------------------------------------------------------------
 def add_CRs_from_new_VDD(TotalData):
     book = xlrd.open_workbook(newVDDpath)
@@ -65,7 +167,7 @@ def add_CRs_from_new_VDD(TotalData):
                 TotalData[j+1][7] = CRNumberPlanned
                 TotalData[j+1][8] = Planned[i][0]
                 TotalData[j+1][9] = Planned[i][1]
-                for k in range(10,21,1):
+                for k in range(10,len(Planned[0]),1):
                     TotalData[j+1][k] = Planned[i][k-7]
                 CRfound = True
                 print(CRNumberPlanned, " from Planned tab does not exist in Total data")
@@ -408,7 +510,7 @@ def update_TotalData_from_PrevTotalData(TotalData):
                 TotalData[i][3] = NewVDDdate
                 for k in range(4,7,1):
                     TotalData[i][k] = PrevTotalData[j][k]
-                for k in range(8,21,1):
+                for k in range(8,len(PrevTotalData[0]),1):
                     TotalData[i][k] = PrevTotalData[j][k]
     # Add items from previous total data not in the new total data
     for i in range(1,PrevTDcolums, 1):
@@ -574,6 +676,7 @@ def main():
     TotalData = update_TotalData_from_PrevTotalData(TotalData)
     TotalData = delete_Empty_Lines(TotalData)
     TotalData = add_CRs_from_new_VDD(TotalData)
+    TotalData = Get_Update_from_Jira(TotalData)
     write_new_HLS_and_TotalData(HLS,TotalData)
 #----------------------------------------------------------------------
 if __name__ == "__main__":
