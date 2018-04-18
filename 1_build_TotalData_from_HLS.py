@@ -51,7 +51,7 @@ def Get_Update_from_Jira(TotalData):
                 CRs[row] = CRs[row][:i]
             i+=1
     options = {'server': 'http://alm.rockwellcollins.com/issues/'}
-    jira = JIRA(options, basic_auth=('jpgaviri','Canada18*'))#Use RCI password
+    jira = JIRA(options, basic_auth=('jpgaviri','PSW*'))#Use RCI password
 
     i=0
     for CR in CRs:
