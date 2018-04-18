@@ -10,7 +10,7 @@ import datetime
 #from docx import Document
 import docx
 #oldVDDpath = "VDD_generator_M145_V5_5_1_Delivery_JIRA Systems and Domains 3-19-2018"
-newVDDpath = "VDD_TotalData_4-11-2018.xlsx"
+newVDDpath = "VDD_4-17-2018.xlsx"
 #SoftwareVersionSoftwareVersion  = "V5.5.0"
 #DocsVersion1 = "V5.5.0 Docs"
 #DocsVersion2 = "V5.5.1 Docs"
