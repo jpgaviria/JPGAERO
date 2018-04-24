@@ -21,9 +21,9 @@ UseLatLonAlt = True
 #grid_goal_lat_lon_alt = (-122.39966, 37.793593, 0) # Californa avenue and front
 #grid_goal_lat_lon_alt = (-122.39652, 37.79360, 15) # On the roof
 #grid_goal_lat_lon_alt = (-122.39686, 37.79426, 0) # center of hollow small building
-#grid_goal_lat_lon_alt = (-122.39629, 37.79244, 0) # center of hollow Tall building
+grid_goal_lat_lon_alt = (-122.39629, 37.79244, 0) # center of hollow Tall building
 #grid_goal_lat_lon_alt = (-122.402273, 37.79741, 0) # cloce to C letter on hollow building far Away north west
-grid_goal_lat_lon_alt = (-122.392300, 37.791315, 0) # Spear St Plaza behind building far Away south east
+#grid_goal_lat_lon_alt = (-122.392300, 37.791315, 0) # Spear St Plaza behind building far Away south east
 
 
 class States(Enum):
