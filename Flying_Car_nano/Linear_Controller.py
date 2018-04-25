@@ -100,7 +100,10 @@ class LinearCascadingController:
         #   u_1_bar and then use the linear math from above
         #   to transform u_1_bar into u_1 and then return u_1
         
-        u_1 = 0.0
+        error = z_target - z_actual
+        error_dot = z_dot_target - z_dot_actual
+        u_1_bar = (self.z_k_p*error) + (self.z_k_d*error_dot) + z_dot_dot_target
+        u_1 = self.m * (self.g-u_1_bar)
         return u_1
 
     
@@ -122,7 +125,10 @@ class LinearCascadingController:
         #   y_dot_dot_target and then use the linear math from above
         #   to transform y_dot_dot_target into phi_commanded
         #   and then return phi_commanded
-        phi_commanded = 0.0
+        error = y_target - y_actual
+        error_dot = y_dot_target - y_dot_actual
+        y_dot_dot_target = (self.y_k_p*error) + (self.y_k_d*error_dot) +y_dot_dot_ff
+        phi_commanded = y_dot_dot_target/self.g
         return phi_commanded 
 
 
@@ -142,7 +148,10 @@ class LinearCascadingController:
         #   Implement PD control to calculate u_2_bar
         #   and then use the linear math from above to
         #   transform u_2_bar into u_2 and then return u_2
-        u_2 = 0.0
+        error = phi_target - phi_actual
+        error_dot = phi_dot_target - phi_dot_actual
+        u_2_bar = (self.phi_k_p*error) + (self.phi_k_d*error_dot) 
+        u_2 = self.I_x*u_2_bar
         return u_2
 
 
@@ -161,12 +170,12 @@ if __name__ == "__main__":
 
     #### CONTROLLER GAINS (TUNE THESE) ######
 
-    z_k_p   = 0.0  
-    z_k_d   = 0.0  
-    y_k_p   = 0.0
-    y_k_d   = 0.0
-    phi_k_p = 0.0
-    phi_k_d = 0.0
+    z_k_p   = 0.1  
+    z_k_d   = 10.0  
+    y_k_p   = 0.3
+    y_k_d   = 10.0
+    phi_k_p = 150.0
+    phi_k_d = 50.0
 
     #########################################
 
