@@ -204,7 +204,21 @@ class DroneIn3D(UDACITYDroneIn3D):
         # TODO replace with your own implementation
         # return np.array([p_dot, q_dot, r_dot])
         
-        return super(DroneIn3D, self).get_omega_dot()
+        #return super(DroneIn3D, self).get_omega_dot()
+
+
+
+        tau = np.array([self.tau_x,self.tau_y,self.tau_z])
+        body_rates = np.array([self.p,self.q,self.r])
+        Inertias = np.array([self.i_x, self.i_y, self.i_z])
+        #A = np.dot(Inertias,body_rates)
+        A = Inertias*body_rates
+        B = np.cross(body_rates,A)
+        C = tau - B
+        body_accel = (C)/Inertias
+        return body_accel
+
+
     #Excescise 3.1
     def get_euler_derivatives(self):
         
