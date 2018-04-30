@@ -312,19 +312,24 @@ class Controller(UDACITYController):
         
         # TODO replace with your own implementation
         # return b_x_c, b_y_c
-        
-        return super(Controller, self).lateral_controller(
-            x_target,
-            x_dot_target,
-            x_dot_dot_target,
-            x_actual,
-            x_dot_actual,
-            y_target,
-            y_dot_target,
-            y_dot_dot_target,
-            y_actual,
-            y_dot_actual,
-            c)
+        X_dot_dot_command = self.x_k_p*(x_target-x_actual) + self.x_k_d*(x_dot_target-x_dot_actual) + x_dot_dot_target
+        b_x_c = X_dot_dot_command/c
+
+        Y_dot_dot_command = self.y_k_p*(y_target-y_actual) + self.y_k_d*(y_dot_target-y_dot_actual) + y_dot_dot_target
+        b_y_c = Y_dot_dot_command/c 
+        return b_x_c, b_y_c
+        # return super(Controller, self).lateral_controller(
+        #     x_target,
+        #     x_dot_target,
+        #     x_dot_dot_target,
+        #     x_actual,
+        #     x_dot_actual,
+        #     y_target,
+        #     y_dot_target,
+        #     y_dot_dot_target,
+        #     y_actual,
+        #     y_dot_actual,
+        #     c)
     # Exercise 4.2
 
     def roll_pitch_controller(self,
@@ -334,10 +339,18 @@ class Controller(UDACITYController):
         
         # TODO replace with your own implementation
         # return p_c, q_c
+        b_dot_x_c = self.k_p_roll*(b_x_c_target-rot_mat[0][2])
+        b_dot_y_c = self.k_p_pitch*(b_y_c_target-rot_mat[1][2])
+        A = np.array([ [rot_mat[1][0],-rot_mat[0][0]],[rot_mat[1][1],-rot_mat[0][1] ] ])
+        B = (1/rot_mat[2][2])*A
+        C = np.matmul(B,np.array([b_dot_x_c,b_dot_y_c]))
+        p_c = C[0]
+        q_c = C[1]
+        return p_c, q_c
         
-        return super(Controller, self).roll_pitch_controller(b_x_c_target,
-                                                            b_y_c_target,
-                                                            rot_mat)
+        # return super(Controller, self).roll_pitch_controller(b_x_c_target,
+        #                                                     b_y_c_target,
+        #                                                     rot_mat)
 
     # Exercise 5.1 
 
