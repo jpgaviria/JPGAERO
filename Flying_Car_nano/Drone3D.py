@@ -363,12 +363,22 @@ class Controller(UDACITYController):
                             r_actual):
         # TODO replace with your own implementation
         # return u_bar_p, u_bar_q, u_bar_r
-        return super(Controller, self).body_rate_controller(p_c,
-                                                            q_c,
-                                                            r_c,
-                                                            p_actual,
-                                                            q_actual,
-                                                            r_actual)
+        p_error = p_c - p_actual
+        u_bar_p = self.k_p_p*p_error
+
+        q_error = q_c - q_actual
+        u_bar_q = self.k_p_q*q_error
+
+        r_error = r_c -r_actual
+        u_bar_r = self.k_p_r*r_error
+
+        return u_bar_p, u_bar_q, u_bar_r
+        # return super(Controller, self).body_rate_controller(p_c,
+        #                                                     q_c,
+        #                                                     r_c,
+        #                                                     p_actual,
+        #                                                     q_actual,
+        #                                                     r_actual)
     # Exercise 5.2
 
     def yaw_controller(self,
@@ -377,9 +387,11 @@ class Controller(UDACITYController):
         
         # TODO replace with your own implementation
         # return r_c
+        r_c = self.k_p_yaw*(psi_target-psi_actual)
+        return r_c
         
-        return super(Controller, self).yaw_controller(psi_target,
-                                                    psi_actual)
+        # return super(Controller, self).yaw_controller(psi_target,
+        #                                             psi_actual)
     # Exercise 5.3
 
     def altitude_controller(self,
@@ -392,13 +404,16 @@ class Controller(UDACITYController):
         
         # TODO replace with your own implementation
         # return c
+        u1_bar = self.z_k_p*(z_target-z_actual) + self.z_k_d*(z_dot_target-z_dot_actual) + z_dot_dot_target
+        c = (u1_bar-self.g)/rot_mat[2][2]
+        return c
         
-        return super(Controller, self).altitude_controller(z_target,
-                                                        z_dot_target,
-                                                        z_dot_dot_target,
-                                                        z_actual,
-                                                        z_dot_actual,
-                                                        rot_mat)
+        # return super(Controller, self).altitude_controller(z_target,
+        #                                                 z_dot_target,
+        #                                                 z_dot_dot_target,
+        #                                                 z_actual,
+        #                                                 z_dot_actual,
+        #                                                 rot_mat)
     def attitude_controller(self,
                         b_x_c_target,
                         b_y_c_target,
