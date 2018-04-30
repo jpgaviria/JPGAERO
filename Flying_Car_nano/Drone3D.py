@@ -224,7 +224,13 @@ class DroneIn3D(UDACITYDroneIn3D):
         
         # TODO - replace with your own implementation
         #   return np.array([phi_dot, theta_dot, psi_dot])
-        return super(DroneIn3D, self).get_euler_derivatives()
+        #return super(DroneIn3D, self).get_euler_derivatives()
+        A = np.array([ [1,(np.sin(self.phi)*np.tan(self.theta)),(np.cos(self.phi)*np.tan(self.theta))],\
+                        [0,np.cos(self.phi),-np.sin(self.phi)],\
+                        [0,(np.sin(self.phi)*(1/np.cos(self.theta))),(np.cos(self.phi)*(1/np.cos(self.theta)))]  ])
+        B = np.array ([self.p,self.q,self.r])
+        C = np.dot(A,B)
+        return C
     #Excercise 3.2
     def advance_state(self, dt):
         
@@ -235,8 +241,24 @@ class DroneIn3D(UDACITYDroneIn3D):
         #   it to return the state, so simply updating self.X 
         #   is not enough (though you should do that in this
         #   method too.)
-        
-        return super(DroneIn3D, self).advance_state(dt)
+        Linear_accel = self.linear_acceleration()
+        euler_derivatives = self.get_euler_derivatives()
+        omega_dot = self.get_omega_dot()
+        X_dot = np.array([self.X[6],\
+                        self.X[7],\
+                        self.X[8],\
+                        euler_derivatives[0],\
+                        euler_derivatives[1],\
+                        euler_derivatives[2],
+                        Linear_accel[0],\
+                        Linear_accel[1],\
+                        Linear_accel[2],\
+                        omega_dot[0],
+                        omega_dot[1],
+                        omega_dot[2] ])
+        self.X = self.X + dt*X_dot
+
+        #return super(DroneIn3D, self).advance_state(dt)
 
 class Controller(UDACITYController):
     
