@@ -9,7 +9,7 @@ import os
 import time 
 
 newVDDpath = "VDD_4-05-2018.xlsx"
-os.chdir('C:\\Users\jpgaviri\iCloudDrive\Personal\Python\VDD_Management')
+os.chdir('C:\\Users\\jpgaviri\\iCloudDrive\\Personal\\Python\\VDD_Management')
 def Update_TotalData_from_Jira(VDD):
 
     SheetNames = VDD.sheetnames
