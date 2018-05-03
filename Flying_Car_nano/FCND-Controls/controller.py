@@ -26,7 +26,7 @@ class NonlinearController(object):
                 y_k_d=4.0,
                 k_p_roll=0.5,
                 k_p_pitch=0.5,
-                k_p_yaw=8.0,
+                k_p_yaw=0.8,
                 #k_p_p=0.05,
                 #k_p_q=0.075,
                 #k_p_r=0.05):
@@ -140,11 +140,13 @@ class NonlinearController(object):
         Rz_psi = np.array([ [np.cos(attitude[2]),-np.sin(attitude[2]),0],\
                                 [np.sin(attitude[2]),np.cos(attitude[2]), 0],\
                                 [0,0,1]   ])
-        A = np.dot(Rz_psi,Ry_theta)
+        A = np.matmul(Rz_psi,Ry_theta)
 
-        rotation_matrix = np.dot(A,Rx_phi)
+        rotation_matrix = np.matmul(A,Rx_phi)
         u1_bar = self.z_k_p*(altitude_cmd-altitude) + self.z_k_d*(vertical_velocity_cmd-vertical_velocity) + acceleration_ff
         c = (u1_bar-self.g)/rotation_matrix[2][2]
+        if c > MAX_THRUST:
+            c = MAX_THRUST
         return c
         
     
@@ -169,8 +171,8 @@ class NonlinearController(object):
         Rz_psi = np.array([ [np.cos(attitude[2]),-np.sin(attitude[2]),0],\
                                 [np.sin(attitude[2]),np.cos(attitude[2]), 0],\
                                 [0,0,1]   ])
-        A = np.dot(Rz_psi,Ry_theta)
-        rotation_mat = np.dot(A,Rx_phi)
+        A = np.matmul(Rz_psi,Ry_theta)
+        rotation_mat = np.matmul(A,Rx_phi)
 
         b_dot_x_c = self.k_p_roll*((-acceleration_cmd[0]/thrust_cmd)-rotation_mat[0][2])
         b_dot_y_c = self.k_p_pitch*((-acceleration_cmd[1]/thrust_cmd)-rotation_mat[1][2])
@@ -210,5 +212,6 @@ class NonlinearController(object):
         
         Returns: target yawrate in radians/sec
         """
-        return 0.0
+        r_c = self.k_p_yaw*(yaw_cmd-yaw)
+        return r_c
     

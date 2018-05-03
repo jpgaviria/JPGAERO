@@ -49,6 +49,7 @@ class UnityDrone(Drone):
         #Used for the autograder
         self.all_horizontal_errors = np.empty((0),float)
         self._threshold_horizontal_error = 2.0
+        self._threshold_xtrack = 0
         self.all_vertical_errors = np.empty((0),float)
         self._threshold_vertical_error = 1.0
         self.all_times = np.empty((0),float)
@@ -102,17 +103,17 @@ class UnityDrone(Drone):
 
 
 
-    def update_local_pos_plot_callback(self):
-        self.local_position_q.append([self.local_position[0], self.local_position[1]])
-        X = np.array(self.local_position_q).reshape(-1, 2)
-        self.v.scatter(X, win=self.local_position_plot, update='insert')
+    # def update_local_pos_plot_callback(self):
+    #     self.local_position_q.append([self.local_position[0], self.local_position[1]])
+    #     X = np.array(self.local_position_q).reshape(-1, 2)
+    #     self.v.scatter(X, win=self.local_position_plot, update='insert')
 
-    def update_altitude_plot_callback(self):
-        self.altitude_q.append(self.local_position[2])
-        self.altitude_timestep_q.append(self.altitude_timestep_q[-1] + 1)
-        Y = np.array(self.altitude_q)
-        X = np.array(self.altitude_timestep_q)
-        self.v.line(Y, X=X, win=self.altitude_plot, update='insert')
+    # def update_altitude_plot_callback(self):
+    #     self.altitude_q.append(self.local_position[2])
+    #     self.altitude_timestep_q.append(self.altitude_timestep_q[-1] + 1)
+    #     Y = np.array(self.altitude_q)
+    #     X = np.array(self.altitude_timestep_q)
+    #     self.v.line(Y, X=X, win=self.altitude_plot, update='insert')
 
 
 

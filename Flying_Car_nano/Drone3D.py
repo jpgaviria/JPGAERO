@@ -680,7 +680,7 @@ if __name__ == "__main__":
 
     plt.title('Angular velocities').set_fontsize(20)
     plt.xlabel('$t$ [$s$]').set_fontsize(20)
-    plt.ylabel('$\omega$ [$rad/s$]').set_fontsize(20)
+    plt.ylabel('$\\omega$ [$rad/s$]').set_fontsize(20)
     plt.legend(['P 1','P 2','P 3','P 4' ],fontsize = 14)
 
     plt.grid()
@@ -690,6 +690,6 @@ if __name__ == "__main__":
     plt.plot(t,drone_state_history[:-1,5])
     plt.title('Yaw angle').set_fontsize(20)
     plt.xlabel('$t$ [$s$]').set_fontsize(20)
-    plt.ylabel('$\psi$ [$rad$]').set_fontsize(20)
+    plt.ylabel('$\\psi$ [$rad$]').set_fontsize(20)
     plt.legend(['Planned yaw','Executed yaw'],fontsize = 14)
     plt.show()

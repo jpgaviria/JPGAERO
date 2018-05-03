@@ -75,7 +75,7 @@ class ControlsFlyer(UnityDrone):
         
     def attitude_controller(self):
         # JPG hack to tune controller
-        #self.local_position_target = np.array([0.0, 0.0, -50.0])
+        #self.local_position_target = np.array([0.0, 0.0, -10.0])
         #self.local_velocity_target = np.array([0.0, 0.0, 5.0])
         self.thrust_cmd = self.controller.altitude_control(
                 -self.local_position_target[2],
@@ -120,7 +120,7 @@ class ControlsFlyer(UnityDrone):
 
     def local_position_callback(self):
         if self.flight_state == States.TAKEOFF:
-            if -1.0 * self.local_position[2] > 0.95 * self.target_position[2]:
+            if -1.0 * self.local_position[2] > 0.99 * self.target_position[2]:
                 (self.position_trajectory,
                  self.time_trajectory,
                  self.yaw_trajectory) = self.load_test_trajectory(time_mult=0.5)
