@@ -53,29 +53,29 @@ class ControlsFlyer(UnityDrone):
         #self.register_callback(MsgID.LOCAL_POSITION, self.update_altitude_plot_callback)
         
     def position_controller(self):  
-        # (self.local_position_target,
-        #  self.local_velocity_target,
-        #  yaw_cmd) = self.controller.trajectory_control(
-        #          self.position_trajectory,
-        #          self.yaw_trajectory,
-        #          self.time_trajectory, time.time())
-        # self.attitude_target = np.array((0.0, 0.0, yaw_cmd))
+        (self.local_position_target,
+         self.local_velocity_target,
+         yaw_cmd) = self.controller.trajectory_control(
+                 self.position_trajectory,
+                 self.yaw_trajectory,
+                 self.time_trajectory, time.time())
+        self.attitude_target = np.array((0.0, 0.0, yaw_cmd))
         # JPG hack to tune controller
-        # self.local_position_target = np.array([0.0, 0.0, -7.0])
+        # self.local_position_target = np.array([30.0, 30.0, -40.0])
         # self.attitude_target = np.array((0.0, 0.0, 0.0))
-        # acceleration_cmd = self.controller.lateral_position_control(
-        #         self.local_position_target[0:2],
-        #         self.local_velocity_target[0:2],
-        #         self.local_position[0:2],
-        #         self.local_velocity[0:2])
-        # self.local_acceleration_target = np.array([acceleration_cmd[0],
-        #                                            acceleration_cmd[1],
-        #                                            0.0])
-        a = 1
+        acceleration_cmd = self.controller.lateral_position_control(
+                self.local_position_target[0:2],
+                self.local_velocity_target[0:2],
+                self.local_position[0:2],
+                self.local_velocity[0:2])
+        self.local_acceleration_target = np.array([acceleration_cmd[0],
+                                                   acceleration_cmd[1],
+                                                   0.0])
+        
         
     def attitude_controller(self):
         # JPG hack to tune controller
-        self.local_position_target = np.array([0.0, 0.0, -50.0])
+        #self.local_position_target = np.array([0.0, 0.0, -50.0])
         #self.local_velocity_target = np.array([0.0, 0.0, 5.0])
         self.thrust_cmd = self.controller.altitude_control(
                 -self.local_position_target[2],
@@ -86,7 +86,7 @@ class ControlsFlyer(UnityDrone):
                 9.81)
         #print (self.thrust_cmd)
         # JPG hack for body rate tuning        
-        #self.local_acceleration_target= np.array([0.0, 0.0,0.0])
+        #self.local_acceleration_target= np.array([1.0, 1.0,0.0])
         roll_pitch_rate_cmd = self.controller.roll_pitch_controller(
                 self.local_acceleration_target[0:2],
                 self.attitude,
@@ -129,13 +129,13 @@ class ControlsFlyer(UnityDrone):
                 self.waypoint_transition()
         elif self.flight_state == States.WAYPOINT:
             # JPG hack to tune controllers
-            self.waypoint_transition()
-            # if time.time() > self.time_trajectory[self.waypoint_number]:
-            #     if len(self.all_waypoints) > 0:
-            #         self.waypoint_transition()
-            #     else:
-            #         if np.linalg.norm(self.local_velocity[0:2]) < 1.0:
-            #             self.landing_transition()
+            #self.waypoint_transition()
+            if time.time() > self.time_trajectory[self.waypoint_number]:
+                if len(self.all_waypoints) > 0:
+                    self.waypoint_transition()
+                else:
+                    if np.linalg.norm(self.local_velocity[0:2]) < 1.0:
+                        self.landing_transition()
 
     def velocity_callback(self):
         if self.flight_state == States.LANDING:
@@ -185,10 +185,12 @@ class ControlsFlyer(UnityDrone):
     def waypoint_transition(self):
         #print("waypoint transition")
         # JPG hack to tune controllers
-        #self.waypoint_number = self.waypoint_number + 1
-        #self.target_position = self.all_waypoints.pop(0)
+        self.waypoint_number = self.waypoint_number + 1
+        #a = len(self.all_waypoints)
+        #if  len(self.all_waypoints)>0:
+        self.target_position = self.all_waypoints.pop(0)
         #original
-        #self.local_position_target = np.array((self.target_position[0], self.target_position[1], self.target_position[2]))
+        self.local_position_target = np.array((self.target_position[0], self.target_position[1], self.target_position[2]))
         #JPG cheat to be hovering
         #self.local_position_target = np.array([0.0, 0.0, -7.0])
         self.flight_state = States.WAYPOINT

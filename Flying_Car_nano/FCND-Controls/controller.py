@@ -21,9 +21,9 @@ class NonlinearController(object):
                 z_k_p=9.0, 
                 z_k_d=4.8, 
                 x_k_p=1.0,
-                x_k_d=1.0,
+                x_k_d=4.0,
                 y_k_p=1.0,
-                y_k_d=1.0,
+                y_k_d=4.0,
                 k_p_roll=0.5,
                 k_p_pitch=0.5,
                 k_p_yaw=8.0,
@@ -172,8 +172,8 @@ class NonlinearController(object):
         A = np.dot(Rz_psi,Ry_theta)
         rotation_mat = np.dot(A,Rx_phi)
 
-        b_dot_x_c = self.k_p_roll*((acceleration_cmd[0]/thrust_cmd)-rotation_mat[0][2])
-        b_dot_y_c = self.k_p_pitch*((acceleration_cmd[1]/thrust_cmd)-rotation_mat[1][2])
+        b_dot_x_c = self.k_p_roll*((-acceleration_cmd[0]/thrust_cmd)-rotation_mat[0][2])
+        b_dot_y_c = self.k_p_pitch*((-acceleration_cmd[1]/thrust_cmd)-rotation_mat[1][2])
         A = np.array([ [rotation_mat[1][0],-rotation_mat[0][0]],[rotation_mat[1][1],-rotation_mat[0][1] ] ])
         B = (1/rotation_mat[2][2])*A
         C = np.matmul(B,np.array([b_dot_x_c,b_dot_y_c]))

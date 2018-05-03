@@ -73,32 +73,32 @@ class UnityDrone(Drone):
                 print('For visual autograder start visdom server: python -m visdom.server')
         else:
             print('Visdom library not installed...')
-        #plot data for monitoring live
-        self.v = visdom.Visdom()
-        assert self.v.check_connection()
-        self.qsize = 200
+        # #plot data for monitoring live
+        # self.v = visdom.Visdom()
+        # assert self.v.check_connection()
+        # self.qsize = 200
 
-        # plot local position
+        # # plot local position
 
-        # create q and initial point
-        self.local_position_q = deque(maxlen=self.qsize)
-        self.local_position_q.append([self.local_position[0], self.local_position[1]])
+        # # create q and initial point
+        # self.local_position_q = deque(maxlen=self.qsize)
+        # self.local_position_q.append([self.local_position[0], self.local_position[1]])
 
-        # turn queue into a numpy array
-        X = np.array(self.local_position_q).reshape(-1, 2)
-        self.local_position_plot = self.v.scatter(
-            X, opts=dict(title="Local position (north, east)", xlabel='North', ylabel='East'))
+        # # turn queue into a numpy array
+        # X = np.array(self.local_position_q).reshape(-1, 2)
+        # self.local_position_plot = self.v.scatter(
+        #     X, opts=dict(title="Local position (north, east)", xlabel='North', ylabel='East'))
 
-        # plot altitude (meters)
+        # # plot altitude (meters)
 
-        self.altitude_q = deque(maxlen=self.qsize)
-        self.altitude_q.append(self.local_position[2])
-        self.altitude_timestep_q = deque(maxlen=self.qsize)
-        self.altitude_timestep_q.append(1)
+        # self.altitude_q = deque(maxlen=self.qsize)
+        # self.altitude_q.append(self.local_position[2])
+        # self.altitude_timestep_q = deque(maxlen=self.qsize)
+        # self.altitude_timestep_q.append(1)
 
-        Y = np.array(self.altitude_q)
-        X = np.array(self.altitude_timestep_q)
-        self.altitude_plot = self.v.line(Y, X=X, opts=dict(title="Altitude (meters)", xlabel='Timestep', ylabel='Down'))
+        # Y = np.array(self.altitude_q)
+        # X = np.array(self.altitude_timestep_q)
+        # self.altitude_plot = self.v.line(Y, X=X, opts=dict(title="Altitude (meters)", xlabel='Timestep', ylabel='Down'))
 
 
 
