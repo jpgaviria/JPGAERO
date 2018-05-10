@@ -27,11 +27,11 @@ KiPosZ = 30 # 20
 kpVelXY = 11 # 4
 kpVelZ = 12 # 4
 # Angle control gains
-kpBank = 10 # 5
+kpBank = 11 # 5
 kpYaw = 1.6 # 4
 
 # Angle rate gains
-kpPQR = 75, 75, 5
+kpPQR = 50, 50, 5
 # kpPQR = 23, 23, 5
 # kpPQR = 80, 75, 15
 

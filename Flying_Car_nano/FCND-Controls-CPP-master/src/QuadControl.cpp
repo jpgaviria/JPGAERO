@@ -203,7 +203,7 @@ float QuadControl::AltitudeControl(float posZCmd, float velZCmd, float posZ, flo
   //integratedAltitudeError += z_pos_error * dt;
   float z_vel_cmd = (kpPosZ * z_pos_error) + velZCmd;
 
-  //z_vel_cmd = CONSTRAIN(z_vel_cmd, -maxAscentRate, maxDescentRate);
+  z_vel_cmd = CONSTRAIN(z_vel_cmd, -maxAscentRate, maxDescentRate);
   float z_vel_error = z_vel_cmd - velZ;
   float z_Accel_cmd = kpVelZ * (z_vel_error) + (KiPosZ * integratedAltitudeError) + accelZCmd;
   float Acceleration = (-z_Accel_cmd +9.81) / b_z;
