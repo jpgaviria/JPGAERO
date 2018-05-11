@@ -136,8 +136,6 @@ class NonlinearController(object):
         d_term_x = self.x_k_d * x_err_dot
 
         x_dot_dot_command = p_term_x + d_term_x + acceleration_ff[0]
-        # TBD Thrust here
-        #b_x_c = x_dot_dot_command/c
         b_x_c = x_dot_dot_command
         
         
@@ -149,15 +147,9 @@ class NonlinearController(object):
 
         y_dot_dot_command = p_term_y + d_term_y + acceleration_ff[1]
         
-        # TBD Thrust here
-        #b_y_c = y_dot_dot_command/c        
         b_y_c = y_dot_dot_command       
         
-        # X_dot_dot_command = self.x_k_p*(local_position_cmd[0]-local_position[0]) + self.x_k_d*(local_velocity_cmd[0]-local_velocity[0]) + acceleration_ff[0]
-        # b_x_c = X_dot_dot_command
 
-        # Y_dot_dot_command = self.y_k_p*(local_position_cmd[1]-local_position[1]) + self.y_k_d*(local_velocity_cmd[1]-local_velocity[1]) + acceleration_ff[1]
-        # b_y_c = Y_dot_dot_command 
         return np.array([b_x_c,b_y_c])
     
     def altitude_control(self, altitude_cmd, vertical_velocity_cmd, altitude, vertical_velocity, attitude, acceleration_ff=0.0):
@@ -184,25 +176,7 @@ class NonlinearController(object):
         u_1_bar = p_term + d_term + acceleration_ff
         
         c = (u_1_bar - self.g)/b_z
-        
-        
-        # # Calculate rotation matrix first from attitude
-        # Rx_phi = np.array([ [1,0,0],\
-        #                 [0,np.cos(attitude[0]),-np.sin(attitude[0])],\
-        #                 [0,np.sin(attitude[0]),np.cos(attitude[0])] ]) 
-        # Ry_theta = np.array([ [np.cos(attitude[1]),0,np.sin(attitude[1])],\
-        #                         [0,1,0],\
-        #                         [-np.sin(attitude[1]),0,np.cos(attitude[1])]  ])
-        # Rz_psi = np.array([ [np.cos(attitude[2]),-np.sin(attitude[2]),0],\
-        #                         [np.sin(attitude[2]),np.cos(attitude[2]), 0],\
-        #                         [0,0,1]   ])
-        # A = np.matmul(Rz_psi,Ry_theta)
 
-        # rotation_matrix = np.matmul(A,Rx_phi)
-        # u1_bar = self.z_k_p*(altitude_cmd-altitude) + self.z_k_d*(vertical_velocity_cmd-vertical_velocity) + acceleration_ff
-        # c = (u1_bar-self.g)/rotation_matrix[2][2]
-        # if c > MAX_THRUST:
-        #     c = MAX_THRUST
         return c
         
     
@@ -219,12 +193,12 @@ class NonlinearController(object):
         c = -thrust_cmd/DRONE_MASS_KG
         rot_mat = euler2RM(attitude[0],attitude[1],attitude[2])
         b_x = rot_mat[0,2]
-        #TBD if Thrust command is correct here
+
         b_x_err = (acceleration_cmd[0]/c) - b_x
         b_x_p_term = self.k_p_roll * b_x_err
         
         b_y = rot_mat[1,2]
-        #TBD if Thrust command is correct here
+
         b_y_err = (acceleration_cmd[1]/c) - b_y  
         b_y_p_term = self.k_p_pitch * b_y_err
         
@@ -236,32 +210,7 @@ class NonlinearController(object):
         rot_rate = np.matmul(rot_mat1,np.array([b_x_commanded_dot,b_y_commanded_dot]).T)
         p_c = rot_rate[0]
         q_c = rot_rate[1]
-        # if p_c > 3.0:
-        #     print (p_c,acceleration_cmd[0])
-        # if q_c > 2:
-        #     print (q_c,acceleration_cmd[1])
-        # print (acceleration_cmd)
-        # Calculate rotation matrix first from attitude
 
-        # Rx_phi = np.array([ [1,0,0],\
-        #                 [0,np.cos(attitude[0]),-np.sin(attitude[0])],\
-        #                 [0,np.sin(attitude[0]),np.cos(attitude[0])] ]) 
-        # Ry_theta = np.array([ [np.cos(attitude[1]),0,np.sin(attitude[1])],\
-        #                         [0,1,0],\
-        #                         [-np.sin(attitude[1]),0,np.cos(attitude[1])]  ])
-        # Rz_psi = np.array([ [np.cos(attitude[2]),-np.sin(attitude[2]),0],\
-        #                         [np.sin(attitude[2]),np.cos(attitude[2]), 0],\
-        #                         [0,0,1]   ])
-        # A = np.matmul(Rz_psi,Ry_theta)
-        # rotation_mat = np.matmul(A,Rx_phi)
-
-        # b_dot_x_c = self.k_p_roll*((-acceleration_cmd[0]/thrust_cmd)-rotation_mat[0][2])
-        # b_dot_y_c = self.k_p_pitch*((-acceleration_cmd[1]/thrust_cmd)-rotation_mat[1][2])
-        # A = np.array([ [rotation_mat[1][0],-rotation_mat[0][0]],[rotation_mat[1][1],-rotation_mat[0][1] ] ])
-        # B = (1/rotation_mat[2][2])*A
-        # C = np.matmul(B,np.array([b_dot_x_c,b_dot_y_c]))
-        # p_c = C[0]
-        # q_c = C[1]
         return np.array([p_c, q_c])
     
     def body_rate_control(self, body_rate_cmd, body_rate):
@@ -282,14 +231,7 @@ class NonlinearController(object):
         r_err= body_rate_cmd[2] - body_rate[2]
         u_bar_r = self.k_p_r * r_err*MOI[1]
         
-        # p_error = body_rate_cmd[0] - body_rate[0]
-        # u_bar_p = self.k_p_p*p_error
 
-        # q_error = body_rate_cmd[1] - body_rate[1]
-        # u_bar_q = self.k_p_q*q_error
-
-        # r_error = body_rate_cmd[2] - body_rate[2]
-        # u_bar_r = self.k_p_r*r_error
 
         return np.array([u_bar_p, u_bar_q, u_bar_r])
     
@@ -304,45 +246,6 @@ class NonlinearController(object):
         """
         psi_err = yaw_cmd - yaw
         r_c = self.k_p_yaw * psi_err
- 
-        # r_c = self.k_p_yaw*(yaw_cmd-yaw)
+
         return r_c
-    # def attitude_controller(self,
-    #                        b_x_c_target,
-    #                        b_y_c_target,
-    #                        psi_target,
-    #                        psi_actual,
-    #                        p_actual,
-    #                        q_actual,
-    #                        r_actual,
-    #                        rot_mat):
-        
-    #     p_c, q_c = self.roll_pitch_controller(b_x_c_target,
-    #                                           b_y_c_target,
-    #                                           rot_mat)
-        
-    #     r_c = self.yaw_controller(psi_target, 
-    #                               psi_actual)
-        
-    #     u_bar_p, u_bar_q, u_bar_r = self.body_rate_controller(p_c,
-    #                                                           q_c,
-    #                                                           r_c,
-    #                                                           p_actual,
-    #                                                           q_actual,
-    #                                                           r_actual)
-        
-    #     return u_bar_p, u_bar_q, u_bar_r 
-
-
-    # def get_euler_derivatives(self):
-        
-    #     euler_rot_mat= np.array([[1, sin(self.phi) * tan(self.theta), cos(self.phi) * tan(self.theta)],
-    #                              [0, cos(self.phi), -sin(self.phi)],
-    #                              [0, sin(self.phi) / cos(self.theta), cos(self.phi) / cos(self.theta)]])
-        
-        
-    #     derivatives_in_bodyframe =np.array([self.p,self.q,self.r]).T
-        
-    #     euler_dot= np.matmul(euler_rot_mat,derivatives_in_bodyframe)
-        
-    #     return euler_dot   
+  
