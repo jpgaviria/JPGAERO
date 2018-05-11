@@ -12,7 +12,7 @@ import numpy as np
 
 from udacidrone import Drone
 from unity_drone import UnityDrone
-from controller1 import NonlinearController
+from controller2 import NonlinearController
 from udacidrone.connection import MavlinkConnection  # noqa: F401
 from udacidrone.messaging import MsgID
 import os
@@ -59,11 +59,13 @@ class ControlsFlyer(UnityDrone):
                  self.position_trajectory,
                  self.yaw_trajectory,
                  self.time_trajectory, time.time())
+        #JPG Hack
+        #yaw_cmd = 0.0
         self.attitude_target = np.array((0.0, 0.0, yaw_cmd))
         # JPG hack to tune controller
-        self.local_position_target = np.array([0.0, 0.0, 0.0])
-        self.local_velocity_target = np.array((0.0, 0.0, 0.0))
-        self.attitude_target = np.array((0.0, 0.0, 0.0))
+        #self.local_position_target = np.array([0.0, 10.0, -20.0])
+        #self.local_velocity_target = np.array((0.0, 0.0, 0.0))
+        #self.attitude_target = np.array((0.0, 0.0, 0.0))
         acceleration_cmd = self.controller.lateral_position_control(
                 self.local_position_target[0:2],
                 self.local_velocity_target[0:2],
@@ -76,8 +78,8 @@ class ControlsFlyer(UnityDrone):
         
     def attitude_controller(self):
         # JPG hack to tune controller
-        # self.local_position_target = np.array([0.0, 0.0, -10.0])
-        # self.local_velocity_target = np.array([0.0, 0.0, 0.0])
+        #self.local_position_target = np.array([100.0, 0.0, -20.0])
+        #self.local_velocity_target = np.array([0.0, 0.0, 0.0])
         self.thrust_cmd = self.controller.altitude_control(
                 -self.local_position_target[2],
                 -self.local_velocity_target[2],
@@ -86,14 +88,14 @@ class ControlsFlyer(UnityDrone):
                 self.attitude,
                 9.81)
         #print (self.thrust_cmd)
-        # JPG hack for body rate tuning        
-        # self.local_acceleration_target= np.array([2.0, 2.0,0.0])
+        #JPG hack for body rate tuning        
+        #self.local_acceleration_target= np.array([5.0, 5.0,0.0])
         roll_pitch_rate_cmd = self.controller.roll_pitch_controller(
                 self.local_acceleration_target[0:2],
                 self.attitude,
                 self.thrust_cmd)
         # JPG hack for body rate tuning        
-        # self.attitude_target[2]  = 5.0      
+        #self.attitude_target[2]  = 10.0      
         yawrate_cmd = self.controller.yaw_control(
                 self.attitude_target[2],
                 self.attitude[2])
@@ -103,7 +105,7 @@ class ControlsFlyer(UnityDrone):
         
     def bodyrate_controller(self):
         # JPG hack for body rate tuning        
-        #self.body_rate_target= np.array([0.0, 0.0, 0.5])
+        #self.body_rate_target= np.array([0.0, 0.0, 0.0])
         moment_cmd = self.controller.body_rate_control(
                 self.body_rate_target,
                 self.gyro_raw)
