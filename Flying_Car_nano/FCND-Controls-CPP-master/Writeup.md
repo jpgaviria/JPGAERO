@@ -7,31 +7,32 @@ For easy navigation throughout this document, here is an outline:
  - [Implemented Controller](#implemented-controller)
  - [Flight Evaluation](#flight-evaluation)
  - [Extra Challenge 1](#extra-challenge)
+ - [Extra Challenge 2](#estra-challenge2)
 
 
 ## Implemented Controller ##
 
-# Implemented body rate control in C++. #
+### Implemented body rate control in C++. ###
 
 ![body rate control in C++](./Body-rate.PNG)
 
-# Implement roll pitch control in C++.
+### Implement roll pitch control in C++. ###
 
 ![roll pitch control in C++](./Roll-Pitch.PNG)
 
-# Implement altitude controller in C++.
+### Implement altitude controller in C++. ###
 
 ![altitude controller in C++.](./Altitude.PNG)
 
-# Implement lateral position control in C++.
+### Implement lateral position control in C++. ###
 
 ![lateral position control in C++](./Lateral-position.PNG)
 
-# Implement yaw control in C++.
+### Implement yaw control in C++. ###
 
 ![yaw control in C++.](./yaw.PNG)
 
-# Implement calculating the motor commands given commanded thrust and moments in C++.
+### Implement calculating the motor commands given commanded thrust and moments in C++. ###
 
 ![motor commands](./Motor.PNG)
 
@@ -39,17 +40,17 @@ For easy navigation throughout this document, here is an outline:
 ## Flight Evaluation ##
 
 
-# Implement calculating the motor commands given commanded thrust and moments in C++.
+### Implement calculating the motor commands given commanded thrust and moments in C++. ###
 - Scenario 1
-![Scenario1](./Scenario1)
+![Scenario1](./Scenario1.PNG)
 - Scenario 2
-![Scenario2](./Scenario2)
+![Scenario2](./Scenario2.PNG)
 - Scenario 3
-![Scenario3](./Scenario3)
+![Scenario3](./Scenario3.PNG)
 - Scenario 4
-![Scenario4](./Scenario4)
+![Scenario4](./Scenario4.PNG)
 - Scenario 5
-![Scenario5](./Scenario5)
+![Scenario5](./Scenario5.PNG)
 
 
 
@@ -65,7 +66,7 @@ Did the velocity-specified trajectory make a difference? Why?
 - yes it made an improvement, the drone was able to follow the trajectory better, this is because on the controller I'm using velocity FF to help the controller, prior to this velocity cmd _ff was 0
 
 
-### Extra Challenge 2 (Optional) ###
+## Extra Challenge 2 ##
 
 For flying a trajectory, is there a way to provide even more information for even better tracking?
 - yes I further modified the file to also calculate predicted accelerations, this made the file track almost perfectly, the first drone after a little bit matches exaclty the other drone path.
