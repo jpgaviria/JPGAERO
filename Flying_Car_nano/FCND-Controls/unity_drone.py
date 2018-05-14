@@ -281,13 +281,29 @@ class UnityDrone(Drone):
         time_trajectory = []
         yaw_trajectory = []
         current_time = time.time()
+        velocity_trajectory = []
+        accel_trajectory = []
+        prev_velocity = []
         for i in range(len(data[:,0])):
             position_trajectory.append(data[i,1:4])
+            if i == 0:
+                velocity_trajectory.append(np.array([0,0,0]))
+                accel_trajectory.append(np.array([0,0,0]))
+                prev_velocity = np.array([0,0,0])
+            else:
+                velocity = data[i,1:4]- data[i-1,1:4]
+                velocity = velocity/time_mult
+                velocity_trajectory.append(velocity)
+                accel = (velocity - prev_velocity)/time_mult
+                accel_trajectory.append(accel)
+                prev_velocity = velocity
+                
             time_trajectory.append(data[i,0]*time_mult+current_time)
         for i in range(0,len(position_trajectory)-1):
             yaw_trajectory.append(np.arctan2(position_trajectory[i+1][1]-position_trajectory[i][1],position_trajectory[i+1][0]-position_trajectory[i][0]))
         yaw_trajectory.append(yaw_trajectory[-1])
-        return(position_trajectory,time_trajectory,yaw_trajectory)
+        #print(position_trajectory,time_trajectory,yaw_trajectory)
+        return(position_trajectory,time_trajectory,yaw_trajectory, velocity_trajectory,accel_trajectory)
     
     def calculate_horizontal_error(self):
         """Calcuate the error beteween the local position and target local position

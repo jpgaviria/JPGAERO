@@ -12,35 +12,35 @@ import math
 from math import sin, cos, tan, sqrt
 
 DRONE_MASS_KG = 0.5
-GRAVITY = -9.81
 MOI = np.array([0.005, 0.005, 0.01])
 MAX_THRUST = 10.0
+MIN_THRUST = 2.0
 MAX_TORQUE = 1.0
-maxSpeedXY = 1000.0
-maxAccelXY = 1000.0
+maxSpeedXY = 10.0
+maxAccelXY = 10.0
 maxAscentRate = 1000.0
 maxDescentRate = 1000.0
-maxTiltAngle = 1.0
+maxTiltAngle = 0.3
 
 class NonlinearController(object):
 
     def __init__(self,
-                x_k_p=1.5,
-                x_k_d=3.0,
-                y_k_p=1.5,
-                y_k_d=3.0,
-                z_k_p=3.0, 
-                z_k_d=7.0, 
+                x_k_p=0.0,
+                x_k_d=1.0,
+                y_k_p=0.0,
+                y_k_d=1.0,
+                z_k_p=1.5, 
+                z_k_d=6.0, 
                 z_k_i=0.0, 
-                k_p_roll=3.0,
-                k_p_pitch=3.0,#0.5,
-                k_p_yaw=1.5,
+                k_p_roll=5.0,
+                k_p_pitch=5.0,#0.5,
+                k_p_yaw=1.0,
                 #k_p_p=0.05,
                 #k_p_q=0.075,
                 #k_p_r=0.05):
-                k_p_p=10.0,
-                k_p_q=10.0,
-                k_p_r=1.5):
+                k_p_p=25.0,
+                k_p_q=25.0,
+                k_p_r=10.0):
         """Initialize the controller object and control gains"""
         self.z_k_p = z_k_p
         self.z_k_d = z_k_d
@@ -55,7 +55,7 @@ class NonlinearController(object):
         self.k_p_p = k_p_p
         self.k_p_q = k_p_q
         self.k_p_r = k_p_r
-        self.g= 9.81
+        self.g= -9.81
 
         return
     def CONSTRAIN(self,variable, minimum, maximum):
@@ -66,7 +66,7 @@ class NonlinearController(object):
         return variable
 
  
-    def trajectory_control(self, position_trajectory, yaw_trajectory, time_trajectory, current_time):
+    def trajectory_control(self, position_trajectory, yaw_trajectory, time_trajectory, velocity_trajectory_FF, accel_trajectory_FF, current_time):
         """Generate a commanded position, velocity and yaw based on the trajectory
         
         Args:
@@ -86,6 +86,10 @@ class NonlinearController(object):
         if current_time < time_ref:
             position0 = position_trajectory[ind_min - 1]
             position1 = position_trajectory[ind_min]
+            velocity0 = velocity_trajectory_FF[ind_min - 1]
+            velocity1 = velocity_trajectory_FF[ind_min]
+
+            
             
             time0 = time_trajectory[ind_min - 1]
             time1 = time_trajectory[ind_min]
@@ -96,6 +100,8 @@ class NonlinearController(object):
             if ind_min >= len(position_trajectory) - 1:
                 position0 = position_trajectory[ind_min]
                 position1 = position_trajectory[ind_min]
+                velocity0 = velocity_trajectory_FF[ind_min]
+                velocity1 = velocity_trajectory_FF[ind_min]
                 
                 time0 = 0.0
                 time1 = 1.0
@@ -103,15 +109,19 @@ class NonlinearController(object):
 
                 position0 = position_trajectory[ind_min]
                 position1 = position_trajectory[ind_min + 1]
+                velocity0 = velocity_trajectory_FF[ind_min]
+                velocity1 = velocity_trajectory_FF[ind_min + 1]
+
                 time0 = time_trajectory[ind_min]
                 time1 = time_trajectory[ind_min + 1]
             
         position_cmd = (position1 - position0) * \
                         (current_time - time0) / (time1 - time0) + position0
         velocity_cmd = (position1 - position0) / (time1 - time0)
+        accel_cmd = (velocity1 - velocity0) / (time1 - time0)
         
         
-        return (position_cmd, velocity_cmd, yaw_cmd)
+        return (position_cmd, velocity_cmd, yaw_cmd, accel_cmd)
     
     def lateral_position_control(self, local_position_cmd, local_velocity_cmd, local_position, local_velocity,
                                acceleration_ff = np.array([0.0, 0.0])):
@@ -164,7 +174,7 @@ class NonlinearController(object):
         rot_mat = euler2RM(attitude[0],attitude[1],attitude[2])
         b_z = rot_mat[2][2]
         z_pos_error = altitude_cmd - altitude
-        integratedAltitudeError = 1.0
+        integratedAltitudeError = 0.0
         z_vel_cmd = (self.z_k_p * z_pos_error) + vertical_velocity_cmd
         #z_vel_cmd = self.CONSTRAIN(z_vel_cmd, -maxAscentRate, maxDescentRate)
 
@@ -173,6 +183,9 @@ class NonlinearController(object):
         Acceleration = (z_Accel_cmd - self.g) / b_z
 
         thrust = Acceleration * DRONE_MASS_KG
+        thrust = self.CONSTRAIN(thrust, MIN_THRUST, MAX_THRUST)
+       
+        #print(thrust)
 
         return thrust
         
@@ -252,7 +265,7 @@ class NonlinearController(object):
         #if (psi_err< 5.0):
         #    print(yaw_cmd)
         #psi_err = self.CONSTRAIN(psi_err, -math.pi, math.pi)
-        psi_err = self.CONSTRAIN(psi_err, 0, math.pi)
+        psi_err = self.CONSTRAIN(psi_err, -math.pi, math.pi)
         r_c = self.k_p_yaw * psi_err
 
         return r_c
