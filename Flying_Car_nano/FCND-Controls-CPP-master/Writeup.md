@@ -14,25 +14,63 @@ For easy navigation throughout this document, here is an outline:
 
 ### Implemented body rate control in C++. ###
 
+Implemented a P controller for roll, pitch and yaw body rates
+Multiply the body rate command by the moment of inertia of each axis
+
 ![body rate control in C++](./Body-rate.PNG)
 
 ### Implement roll pitch control in C++. ###
+
+This function takes local x and y acelerations and converts them to roll and pitch body rate commands, Yaw rate command is sent as 0
+
+The controller used was a P controller for roll and pitch rates. The Max tilt angle was supposed to be used, however we do not have direct access to pitch and roll angles, I implemented the limit on the error before passing it to the controller.
+
+Used math from 3D drone excercise to convert from local to body rates 
 
 ![roll pitch control in C++](./Roll-Pitch.PNG)
 
 ### Implement altitude controller in C++. ###
 
+Implemented cascaded P and PI controllers for altitude control
+
+First P controller takes position error and velocity feed forward to come up with a velocity command
+
+the velocity command is limited on the ascend/descend rate before passing it to the acceleration P controller
+
+The second PI controller takes filtered velocity command and integrated altitude error to calculate an acceleration command.
+
+Since NED coordinates positive position is down, we change the direction of the controller output and add it to the gravity to come up with a delta acceleration. Using math from drone3D excercise we have to divide by the rotation matrix term that includes the drone attitude, if it is completely flat then the division is just 1
+
+Thrust is a force, so in order to get a force we need to multiply the acceleration by the mass.
+
 ![altitude controller in C++.](./Altitude.PNG)
 
 ### Implement lateral position control in C++. ###
+
+Lateral controller takes local position and outputs local X and Y accelerations.
+
+Implemented cascaded P controllers to first go from position to velocity command with velocity Feed forward. Then filter the velocity command with the maxSpeedXY
+
+Second P controller takes limited velocity command and feed forward acceleration to come up with an acceleration command, then filter the output of the controller for maxAccelXY
+
+Set Z acceleration as 0, this is not used, the altitude controller takes care of Z
+
 
 ![lateral position control in C++](./Lateral-position.PNG)
 
 ### Implement yaw control in C++. ###
 
+Yaw control is a straightforward P controller, calculates yaw error to come up with a yawrate command, limit the output from -pi to pi
+
 ![yaw control in C++.](./yaw.PNG)
 
 ### Implement calculating the motor commands given commanded thrust and moments in C++. ###
+
+This function takes the thrust and rotation moments about each axis
+
+for each motor we need to that 2 motors rotate clockwise and 2 rotate counterclockwise to counteract each other.
+
+Then for each motor add the moments and then divide by 4 as the total needs to be split between the 4 motors.
 
 ![motor commands](./Motor.PNG)
 
