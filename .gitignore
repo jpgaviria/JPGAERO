@@ -1368,9 +1368,9 @@ Flying_Car_nano/FCND-Controls-CPP-master/lib/freeglut/Readme.txt
 Flying_Car_nano/FCND-Controls-CPP-master/project/CPPSim.pro
 Flying_Car_nano/FCND-Controls-CPP-master/.gitignore
 Flying_Car_nano/Lesson 4 - 3D Drone-Full-Notebook.pdf
-ECM/1000.pdf
-Flying_Car_nano/FCND-Sim_Windows_64-bit_Data/app.info
+Flying_Car_nano/FCND-Sim_Windows_64-bit_Data/Plugins/sqlite3.dll
 Flying_Car_nano/FCND-Sim_Windows_64-bit_Data/ScreenSelector.bmp
+Flying_Car_nano/FCND-Sim_Windows_64-bit_Data/app.info
 Flying_Car_nano/FCND-Sim_Windows_64-bit_Data/boot.config
 Flying_Car_nano/FCND-Sim_Windows_64-bit_Data/globalgamemanagers
 Flying_Car_nano/FCND-Sim_Windows_64-bit_Data/globalgamemanagers.assets
@@ -1892,7 +1892,6 @@ Flying_Car_nano/FCND-Sim_Windows_64-bit_Data/Plugins/libGLESv2.dll
 Flying_Car_nano/FCND-Sim_Windows_64-bit_Data/Plugins/libeay32.dll
 Flying_Car_nano/FCND-Sim_Windows_64-bit_Data/Plugins/msvcr110.dll
 Flying_Car_nano/FCND-Sim_Windows_64-bit_Data/Plugins/pthreadVC2.dll
-Flying_Car_nano/FCND-Sim_Windows_64-bit_Data/Plugins/sqlite3.dll
 Flying_Car_nano/FCND-Sim_Windows_64-bit_Data/Plugins/ssleay32.dll
 Flying_Car_nano/FCND-Sim_Windows_64-bit_Data/Resources/unity default resources
 Flying_Car_nano/FCND-Sim_Windows_64-bit_Data/Resources/unity_builtin_extra
