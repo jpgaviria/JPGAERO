@@ -51,9 +51,10 @@ class ObjectInThreeD:
         Converts the measured body rates into the Euler angle derivatives using the estimated pitch and roll angles.
         '''
         # TODO: Calculate the Derivatives for the Euler angles in the inertial frame 
-        euler_rot_mat= None
-        derivatives_in_bodyframe = None
-        euler_dot = None
+        euler_rot_mat= np.array([[1, np.sin(phi) * np.tan(theta)],
+                                 [0, np.cos(phi)]])
+        derivatives_in_bodyframe = np.array([p,q])
+        euler_dot = np.matmul(euler_rot_mat,derivatives_in_bodyframe)
 
         return euler_dot
 
@@ -64,10 +65,13 @@ class ObjectInThreeD:
         on the measured values and the estimated roll and pitch angles. 
         '''
         # TODO: Calculate the true acceleration in body frame by removing the gravity component
-        a_body_frame = None
+        rot_mat = self.rotation_matrix(phi, theta)
+        
+
+        a_body_frame = measured_acceleration - np.matmul(rot_mat,self.g)
 
         # TODO: Convert the true acceleration back to the inertial frame
-        a_inertial_frame = None
+        a_inertial_frame = np.matmul(np.linalg.inv(rot_mat), a_body_frame)
 
         return a_inertial_frame
     
@@ -79,9 +83,9 @@ class ObjectInThreeD:
         phi = self.X[4]
         theta = self.X[3]
 
-        euler_dot = None
-        self.X[3] = None         # integrating the roll angle 
-        self.X[4] = None         # integrating the roll angle 
+        euler_dot = self.get_euler_derivatives(phi,theta,p,q)
+        self.X[3] = self.X[3] + euler_dot[1] * dt         # integrating the roll angle 
+        self.X[4] = self.X[4] + euler_dot[0] * dt         # integrating the roll angle 
         
         
     def dead_reckoning_position(self, measured_acceleration):
@@ -92,18 +96,18 @@ class ObjectInThreeD:
         perceived_theta = self.X[3]
 
         # TODO: Conver the body frame acceleration measurements back to the inertial frame measurements
-        a = None
+        a = self.linear_acceleration(measured_acceleration,perceived_phi,perceived_theta)
 
         # TODO: 
         # Use the velocity components of the state vector to update the position components of the state vector
         # Use the linear acceleration in the inertial frame to update the velocity components of the state vector
 
-        self.X[0] = None   # x coordianate x= x + \dot{x} * dt
-        self.X[1] = None   # y coordianate y= y + \dot{y} * dt
-        self.X[2] = None   # z coordianate z= z + \dot{z} * dt
-        self.X[5] = None   # change in velocity along the x is a_x * dt 
-        self.X[6] = None   # change in velocity along the y is a_y * dt 
-        self.X[7] = None   # change in velocity along the z is a_z * dt 
+        self.X[0] = self.X[0] + self.X[5] * dt   # x coordianate x= x + \dot{x} * dt
+        self.X[1] = self.X[1] + self.X[6] * dt   # y coordianate y= y + \dot{y} * dt
+        self.X[2] = self.X[2] + self.X[7] * dt   # z coordianate z= z + \dot{z} * dt
+        self.X[5] = self.X[5] + a[0] * dt        # change in velocity along the x is a_x * dt 
+        self.X[6] = self.X[6] + a[1] * dt        # change in velocity along the y is a_y * dt 
+        self.X[7] = self.X[7] + a[2] * dt        # change in velocity along the z is a_z * dt 
         
     def advance_state(self, measured_acceleration, p, q, dt): 
         '''
@@ -163,13 +167,13 @@ class IMU:
         '''
         # TODO: Convert global frame acceleration into the body frame acceleration
         actual_a = actual_a.reshape(3, 1)
-        linear_acc_bodyframe = None
+        linear_acc_bodyframe = np.matmul(self.rotation_matrix(phi, theta), actual_a)
 
         # TODO: Gravity component of the measurement
-        gravity_component = None
+        gravity_component = np.matmul(self.rotation_matrix(phi, theta), self.g)
 
         # TODO: Error component of the measurement
-        error_component = None
+        error_component = np.random.normal(0.0, self.sigma_a, (3, 1))
 
         measured_acceleration = linear_acc_bodyframe + gravity_component + error_component
 
@@ -180,13 +184,13 @@ class IMU:
         Simulates the gyroscope measurements for the actual change in roll and pitch angles.
         '''
         # TODO: Implement the Conversion matrix 
-        R = None
+        R = np.array([[1, np.sin(phi) * np.tan(theta)], [0, np.cos(phi)]])
 
         # TODO: Calculate the body rate p and q true values 
-        body_rate = None
+        body_rate = np.matmul(np.linalg.inv(R) , np.array([[phi_dot], [theta_dot]]))
 
         # TODO: Add an error to the true body rates
-        measured_bodyrates = None
+        measured_bodyrates = body_rate + np.random.normal(0.0, self.sigma_omega, (2, 1))
 
         return measured_bodyrates
 
@@ -212,7 +216,7 @@ if __name__ == "__main__":
     ax.set_zlabel('$z$ [$m$]').set_fontsize(20)
     plt.legend(['Executed path'],fontsize = 14)
 
-    plt.show()        
+    #plt.show()        
 
 
     phi_test = 0.1 
