@@ -15,8 +15,8 @@ class ComplementaryFilter:
         # TODO: 
         #  implement the estimated pitch and roll 
         
-        self.estimated_theta = None
-        self.estimated_phi = None 
+        self.estimated_theta = ((self.tau/(self.tau+self.dt))*(self.estimated_theta+z[2]*self.dt)) + ((self.dt/(self.tau+self.dt))*z[0])
+        self.estimated_phi = ((self.tau/(self.tau+self.dt))*(self.estimated_phi+z[3]*self.dt)) + ((self.dt/(self.tau+self.dt))*z[1]) 
             
     def make_estimates(self,measurements):
         self.estimated_theta = 0.0
