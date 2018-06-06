@@ -30,7 +30,6 @@ Logs/*
 *.srt
 *.mp4
 *.lib
-*.h
 *.hpp
 *.xlsx
 *.docx
