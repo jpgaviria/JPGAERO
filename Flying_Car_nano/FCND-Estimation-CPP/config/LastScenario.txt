@@ -1,1 +1,1 @@
-../config/08_PredictState.txt
+../config/10_MagUpdate.txt
