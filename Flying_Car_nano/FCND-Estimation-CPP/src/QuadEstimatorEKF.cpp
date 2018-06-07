@@ -90,7 +90,7 @@ void QuadEstimatorEKF::UpdateFromIMU(V3F accel, V3F gyro)
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
  
-  // Ccreate a quaternion class object from the roll, pitch and yaw
+  // Create a quaternion class object from the roll, pitch and yaw
 	Quaternion<float> attitude = Quaternion<float>::FromEuler123_RPY(rollEst, pitchEst, ekfState(6));
 
 	// Use the bult in function of the quaternon class to integrate using giro and DT of the IMU
