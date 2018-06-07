@@ -292,9 +292,13 @@ void QuadEstimatorEKF::UpdateFromGPS(V3F pos, V3F vel)
   zFromX(4) = ekfState(4);
   zFromX(5) = ekfState(5);
 
-  for ( int i = 0; i < 6; i++) {
-    hPrime(i,i) = 1;
-  }
+  hPrime(0, 0) = 1;
+  hPrime(1, 1) = 1;
+  hPrime(2, 2) = 1;
+  hPrime(3, 3) = 1;
+  hPrime(4, 4) = 1;
+  hPrime(5, 5) = 1;
+
   
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 

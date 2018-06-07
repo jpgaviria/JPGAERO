@@ -28,7 +28,7 @@ public:
 	// returns a desired roll and pitch rate 
 	V3F RollPitchControl(V3F accelCmd, Quaternion<float> attitude, float collThrustCmd);
 
-	float AltitudeControl(float posZCmd, float velZCmd, float posZ, float velZ, Quaternion<float> attitude, float accelZCmd, float dt);
+	float AltitudeControl(float posZCmd, float velZCmd, float posZ, float velZ, Quaternion<float> attitude, float accelZCmd, float integratedAltitudeError, float dt);
 
 	// -------------- PARAMETERS --------------
 
