@@ -204,6 +204,7 @@ MatrixXf QuadEstimatorEKF::GetRbgPrime(float roll, float pitch, float yaw)
   //   that your calculations are reasonable
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
+  // fill out the Rbg prime matrix using the math from the paper
   RbgPrime << -cos(pitch)*sin(yaw), -sin(roll)*sin(pitch)*sin(yaw) - cos(roll)*cos(yaw), -cos(roll)*sin(pitch)*sin(yaw) + sin(roll)*cos(yaw),
 	  cos(pitch)*cos(yaw), sin(roll)*sin(pitch)*cos(yaw) - cos(roll)*sin(yaw), cos(roll)*sin(pitch)*cos(yaw) + sin(roll)*sin(yaw),
 	  0, 0, 0;
@@ -252,7 +253,7 @@ void QuadEstimatorEKF::Predict(float dt, V3F accel, V3F gyro)
   gPrime.setIdentity();
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
-  
+  // Fill out g prime matrix using the document 
   gPrime(0,3) = dt;
   gPrime(1,4) = dt;
   gPrime(2,5) = dt;
@@ -261,6 +262,7 @@ void QuadEstimatorEKF::Predict(float dt, V3F accel, V3F gyro)
   gPrime(4, 6) = (RbgPrime(1) * accel).sum() * dt;
   gPrime(5, 6) = (RbgPrime(2) * accel).sum() * dt;
   
+  //Update covariance matrix g Prime and the model covariance Q
   ekfCov = gPrime * ekfCov * gPrime.transpose() + Q;
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
@@ -285,6 +287,7 @@ void QuadEstimatorEKF::UpdateFromGPS(V3F pos, V3F vel)
   //  - The GPS measurement covariance is available in member variable R_GPS
   //  - this is a very simple update
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
+  // Update zfromX using the state
   zFromX(0) = ekfState(0);
   zFromX(1) = ekfState(1);
   zFromX(2) = ekfState(2);
@@ -292,13 +295,13 @@ void QuadEstimatorEKF::UpdateFromGPS(V3F pos, V3F vel)
   zFromX(4) = ekfState(4);
   zFromX(5) = ekfState(5);
 
+  // fill out h prime as per the document
   hPrime(0, 0) = 1;
   hPrime(1, 1) = 1;
   hPrime(2, 2) = 1;
   hPrime(3, 3) = 1;
   hPrime(4, 4) = 1;
   hPrime(5, 5) = 1;
-
   
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
@@ -320,11 +323,14 @@ void QuadEstimatorEKF::UpdateFromMag(float magYaw)
   //    (you don't want to update your yaw the long way around the circle)
   //  - The magnetomer measurement covariance is available in member variable R_Mag
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
+  // Update zFromX from the state
   zFromX(0) = ekfState(6);
+  //Normalize zfromX from - Pi to Pi
   float diff = magYaw - ekfState(6);
   if ( diff > F_PI ) zFromX(0) += 2.f*F_PI;
   if ( diff < -F_PI ) zFromX(0) -= 2.f*F_PI;
-    
+  
+  // Fill out h prime as per the document for a magnetometer
   hPrime(0, 6) = 1;
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
