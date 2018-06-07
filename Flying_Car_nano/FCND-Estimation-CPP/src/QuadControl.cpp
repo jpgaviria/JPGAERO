@@ -412,10 +412,20 @@ float QuadControl::YawControl(float yawCmd, float yaw)
   //////////////////////////////// END SOLUTION ///////////////////////////////*/
  
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
-  float psi_err = yawCmd - yaw;
+  /*float psi_err = yawCmd - yaw;
   psi_err = CONSTRAIN(psi_err, -3.1416f, 3.1416f);
-  yawRateCmd = kpYaw * psi_err;
-
+  yawRateCmd = kpYaw * psi_err;*/
+  float yawError = yawCmd - yaw;
+  yawError = fmodf(yawError, F_PI*2.f);
+  if (yawError > F_PI)
+  {
+	  yawError -= 2.f * F_PI;
+  }
+  else if (yawError < -F_PI)
+  {
+	  yawError += 2.f * F_PI;
+  }
+  yawRateCmd = yawError * kpYaw;
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
   
