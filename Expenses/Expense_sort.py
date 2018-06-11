@@ -20,7 +20,7 @@ def Update_Expenses(Expenses, Transactions):
     
     NumRows = TransactionsWS.max_row
     # NumColumn = TransactionsWS.max_column
-
+    ForeignX = 1
 
     for transaction in range(2,NumRows):
         date = TransactionsWS.cell(transaction, 1).value.strftime('%d_%m_%Y')
@@ -34,8 +34,135 @@ def Update_Expenses(Expenses, Transactions):
                 break
         if match == False:
             Expenses.create_sheet(date[3:])
-        # Add each transaction to the correct month
+            ActiveSheet = Expenses[date[3:]]
+            ActiveSheet.cell(1,1).value = date[3:]
+            ActiveSheet.cell(1,2).value = "USD Exchange rate"
+            ActiveSheet.cell(1,3).value = 1.30
+            ActiveSheet.cell(2,1).value = "Date"
+            ActiveSheet.cell(2,2).value = "Description"
+            ActiveSheet.cell(2,3).value = "milleage @ .55 per km"
+            ActiveSheet.cell(2,4).value = "$ total milleage"
+            ActiveSheet.cell(2,5).value = "meal description"
+            ActiveSheet.cell(2,6).value = "meal cost"
+            ActiveSheet.cell(2,7).value = "Utilities"
+            ActiveSheet.cell(2,8).value = "Travel"
+            ActiveSheet.cell(2,9).value = "health"
+            ActiveSheet.cell(2,10).value = "parking"
+            ActiveSheet.cell(2,11).value = "clothing"
+            ActiveSheet.cell(2,12).value = "tickets"
+            ActiveSheet.cell(2,13).value = "Rent"
+            ActiveSheet.cell(2,15).value = "Other - Category"
+            ActiveSheet.cell(2,16).value = "$ Amount"
+            dateraw = TransactionsWS.cell(transaction, 1).value
+            LastRow = ActiveSheet.max_row + 1
+            DayOfMonth = dateraw.replace(day=1)
+            for day in range(1,31):
+                # Charge the rent + parking
+                if DayOfMonth.day ==1:
+                    ActiveSheet.cell(LastRow,1).value = DayOfMonth 
+                    ActiveSheet.cell(LastRow,2).value = "Office Rent"   
+                    ActiveSheet.cell(LastRow,13).value = 1133   
+                    LastRow +=1
+                # on weekdays add the per diem for gas                    
+                if DayOfMonth.weekday() != 5 and DayOfMonth.weekday() != 6:
+                    ActiveSheet.cell(LastRow,1).value = DayOfMonth
+                    ActiveSheet.cell(LastRow,2).value = "Work at Customer site"   
+                    ActiveSheet.cell(LastRow,3).value = 64   
+                    ActiveSheet.cell(LastRow,4).value = 35.2
+                    LastRow +=1 
+                DayOfMonth = DayOfMonth + datetime.timedelta(days=+1)
+                if DayOfMonth.day ==1:
+                    break
+            month = dateraw.month
 
+        # Add each transaction to the correct month
+        ActiveSheet = Expenses[date[3:]]
+        LastRow = ActiveSheet.max_row
+        # Hide transfer transactions as they don't provide much value
+        if (TransactionsWS.cell(transaction, 6).value != "Transfer"):
+            ActiveSheet.cell(LastRow +1,1).value = TransactionsWS.cell(transaction, 1).value 
+            ActiveSheet.cell(LastRow +1,2).value = TransactionsWS.cell(transaction, 2).value
+        # if the cost is in a USD card then multiply by the exchange
+        if (TransactionsWS.cell(transaction, 7).value == "Starwood Preferred Guest") or \
+                (TransactionsWS.cell(transaction, 7).value == "CREDIT CARD") or \
+                (TransactionsWS.cell(transaction, 7).value == "Bank of America Cash Rewards Visa Platinum Plus ") or \
+                (TransactionsWS.cell(transaction, 7).value == "Green Card"):
+            ForeignX =  ActiveSheet.cell(1,3).value
+        else :
+            ForeignX = 1
+        # add the cost to each category or to the other at the end
+        if (TransactionsWS.cell(transaction, 6).value == "Restaurants") or \
+                (TransactionsWS.cell(transaction, 6).value == "Coffee Shops") or \
+                (TransactionsWS.cell(transaction, 6).value == "Fast Food") or \
+                (TransactionsWS.cell(transaction, 6).value == "Food & Dining"):
+            ActiveSheet.cell(LastRow +1,6).value = (TransactionsWS.cell(transaction, 4).value * ForeignX)
+        elif (TransactionsWS.cell(transaction, 6).value == "Mobile Phone") or \
+                (TransactionsWS.cell(transaction, 6).value == "Internet") or \
+                (TransactionsWS.cell(transaction, 6).value == "Utilities"):
+            ActiveSheet.cell(LastRow +1,7).value = (TransactionsWS.cell(transaction, 4).value * ForeignX)
+        elif (TransactionsWS.cell(transaction, 6).value == "Parking"):
+            ActiveSheet.cell(LastRow +1,10).value = (TransactionsWS.cell(transaction, 4).value * ForeignX)
+        elif (TransactionsWS.cell(transaction, 6).value == "Health & Fitness") or \
+                (TransactionsWS.cell(transaction, 6).value == "Gym") or \
+                (TransactionsWS.cell(transaction, 6).value == "Doctor"):
+            ActiveSheet.cell(LastRow +1,9).value = (TransactionsWS.cell(transaction, 4).value * ForeignX)
+        elif (TransactionsWS.cell(transaction, 6).value == "Rental Car & Taxi") or \
+                (TransactionsWS.cell(transaction, 6).value == "Travel") or \
+                (TransactionsWS.cell(transaction, 6).value == "Air Travel"):
+            ActiveSheet.cell(LastRow +1,8).value = (TransactionsWS.cell(transaction, 4).value * ForeignX)
+        elif (TransactionsWS.cell(transaction, 6).value == "Clothing"):
+            ActiveSheet.cell(LastRow +1,11).value = (TransactionsWS.cell(transaction, 4).value * ForeignX)
+        elif (TransactionsWS.cell(transaction, 6).value == "Transfer"):
+            continue
+        else :
+            ActiveSheet.cell(LastRow +1,16).value = (TransactionsWS.cell(transaction, 4).value * ForeignX)
+            ActiveSheet.cell(LastRow +1,15).value = TransactionsWS.cell(transaction, 6).value
+
+    # add the column totals and then the grand total
+    SheetNames = Expenses.sheetnames
+    for sheet in SheetNames:
+        ActiveSheet = Expenses[sheet]
+        LastRow = ActiveSheet.max_row
+        RowTotal = 0
+        for row in range(3,LastRow):
+            RowTotal += float(ActiveSheet.cell(row,4).value)     
+        ActiveSheet.cell(LastRow +2,4).value = RowTotal
+        RowTotal = 0
+        for row in range(3,LastRow):
+            RowTotal += float(ActiveSheet.cell(row,5).value)     
+        ActiveSheet.cell(LastRow +2,5).value = RowTotal
+        RowTotal = 0
+        for row in range(3,LastRow):
+            RowTotal += float(ActiveSheet.cell(row,6).value)    
+        ActiveSheet.cell(LastRow +2,6).value = RowTotal
+        RowTotal = 0
+        for row in range(3,LastRow):
+            RowTotal += float(ActiveSheet.cell(row,7).value )    
+        ActiveSheet.cell(LastRow +2,7).value = RowTotal
+        RowTotal = 0
+        for row in range(3,LastRow):
+            RowTotal += float(ActiveSheet.cell(row,8).value )    
+        ActiveSheet.cell(LastRow +2,8).value = RowTotal
+        RowTotal = 0
+        for row in range(3,LastRow):
+            RowTotal += float(ActiveSheet.cell(row,9).value )    
+        ActiveSheet.cell(LastRow +2,9).value = RowTotal
+        RowTotal = 0
+        for row in range(3,LastRow):
+            RowTotal += float(ActiveSheet.cell(row,10).value  )   
+        ActiveSheet.cell(LastRow +2,10).value = RowTotal
+        RowTotal = 0
+        for row in range(3,LastRow):
+            RowTotal += float(ActiveSheet.cell(row,11).value )    
+        ActiveSheet.cell(LastRow +2,11).value = RowTotal
+        RowTotal = 0
+        for row in range(3,LastRow):
+            RowTotal += float(ActiveSheet.cell(row,12).value )    
+        ActiveSheet.cell(LastRow +2,12).value = RowTotal
+        RowTotal = 0
+        for row in range(3,LastRow):
+            RowTotal += float(ActiveSheet.cell(row,13).value  )   
+        ActiveSheet.cell(LastRow +2,13).value = RowTotal
 
     # CRs = ['' for x in range(NumRows+1)]
     # newTotalData = VDD.copy_worksheet(TotalDataWS)
