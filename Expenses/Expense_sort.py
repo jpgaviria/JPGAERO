@@ -10,13 +10,13 @@ import time
 #import csv 
 
 Expenses_File = "expenses.xlsx"
-Transactions_File = "transactions_June_08_2018.xlsx"
+Transactions_File = "transactions_june12_2018.xlsx"
 os.chdir('C:\\Users\\jpgaviri\\iCloudDrive\\Personal\\Python\\Expenses')
 def Update_Expenses(Expenses, Transactions):
 
     
 
-    TransactionsWS = Transactions['transactions_June_08_2018']
+    TransactionsWS = Transactions['transactions_june12_2018']
     
     NumRows = TransactionsWS.max_row
     # NumColumn = TransactionsWS.max_column
