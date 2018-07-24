@@ -7,19 +7,20 @@ import datetime
 #import os
 #import glob
 #import math
-#from docx import Document
-import docx
+from docx import Document
+#import docx
 from jira import JIRA
 import os
-oldVDDpath = "VDD_generator_M145_V5_5_1_Delivery_JIRA Systems and Domains 4-17-2018.xlsx"
-newVDDpath = "VDD_generator_M185_V5_5_1_Cert - 23 March 2018.xlsx"
+oldVDDpath = "VDD_generator_M145_V5_5_1_Delivery_JIRA Systems and Domains 4-18-2018.xlsx"
+newVDDpath = "VDD_generator_M185_V5_5_1_Cert_11 July 2018.xlsx"
 SoftwareVersion  = "V5.5.0"
 SoftwareVersion2  = "V5.5.1"
+SoftwareVersion3  = "V5.5.0.1"
 DocsVersion1 = "V5.5.0 Docs"
 DocsVersion2 = "V5.5.1 Docs"
 DocsVersion3 = "V5.5 Black Label Docs"
-NewVDDdate  =   datetime.datetime(2018,3,23)
-os.chdir('C:\\Users\jpgaviri\iCloudDrive\Personal\Python\VDD_Management')
+NewVDDdate  =   datetime.datetime(2018,7,12)
+os.chdir('C:\\Users\\jpgaviri\\iCloudDrive\\Personal\\Python\\VDD_Management')
 #----------------------------------------------------------------------------
 def Get_Update_from_Jira(TotalData):
     print ("Fetching updates form Jira, make sure you are on the RCI network and set the password on the script")
@@ -219,7 +220,7 @@ def add_CRs_from_new_VDD(TotalData):
                     TotalData[j+1][k] = SW[i][k-7]
                 TotalData[j+1][18] = 'N/A'
                 TotalData[j+1][19] = SW[i][11]
-                TotalData[j+1][20] = SW[i][12]
+                #TotalData[j+1][20] = SW[i][12]
                 CRfound = True
                 print(CRNumberSW, " from SW tab does not exist in Total data")
     #-------------------------SW CRs---------------------------------------------        
@@ -270,10 +271,60 @@ def add_CRs_from_new_VDD(TotalData):
                     TotalData[j+1][k] = SW2[i][k-7]
                 TotalData[j+1][18] = 'N/A'
                 TotalData[j+1][19] = SW2[i][11]
-                TotalData[j+1][20] = SW2[i][12]
+                #TotalData[j+1][20] = SW2[i][12]
                 CRfound = True
                 print(CRNumberSW, " from SW2 tab does not exist in Total data")
-
+    #-------------------------SW CRs---------------------------------------------        
+    SWTab3 = book.sheet_by_name(SoftwareVersion3)
+#    Docs1Tab = book.sheet_by_name(DocsVersion1)
+#    Docs2Tab = book.sheet_by_name(DocsVersion2)
+#    Docs3Tab = book.sheet_by_name(DocsVersion3)
+    SWColumns = len(SWTab3.col(2))
+    SWRows = len(SWTab3.row(0))
+    SW3 = [[0 for x in range(SWRows)] for y in range(SWColumns)] 
+    for i in range(0,SWColumns,1):
+        for j in range(0,SWRows,1):
+            cellstring = isinstance(SWTab3.cell(i,j).value,str)
+            if(j == 2 or j==3 or j == 4 or j==5) and i>0 and (cellstring==False):
+                SW3[i][j] = xlrd.xldate.xldate_as_datetime(SWTab3.cell(i,j).value, book.datemode)
+            else:
+                SW3[i][j] = str(SWTab3.cell(i,j).value)
+    CRfound = False
+    while CRfound == False:
+        for i in range(1,SWColumns,1):
+            CRfound = False
+            CRNumberSW = SW3[i][2]
+            CRNumberSW = CRNumberSW.replace(' ','')
+            CRNumberSW = CRNumberSW.replace('\n','')
+            for j in range(1,len(TotalData),1):
+                CRnumberTD = TotalData[j][7]
+                CRnumberTD = CRnumberTD.replace(' ','')
+                CRnumberTD = CRnumberTD.replace('\n','')
+                if CRnumberTD == CRNumberSW:
+                    CRfound = True
+                    break
+            if CRfound == False:
+                #TotalData.append(Planned[i])
+                TotalData.append(['','','','','','','','','','','','','','','','','','','','',''])
+                #TotalData[j+1].extend(['','','','','','',''])
+                TotalData[j+1][0] = ''
+                TotalData[j+1][1] = 'New CR from '+ SoftwareVersion3 +' SW tab'
+                TotalData[j+1][2] = NewVDDdate
+                TotalData[j+1][3] = NewVDDdate
+                TotalData[j+1][4] = ''
+                TotalData[j+1][5] = ''
+                #Linked
+                TotalData[j+1][6] = ''
+                TotalData[j+1][7] = CRNumberSW
+                TotalData[j+1][8] = SW3[i][0]
+                TotalData[j+1][9] = SW3[i][1]
+                for k in range(10,18,1):
+                    TotalData[j+1][k] = SW3[i][k-7]
+                TotalData[j+1][18] = 'N/A'
+                TotalData[j+1][19] = SW3[i][11]
+                #TotalData[j+1][20] = SW3[i][12]
+                CRfound = True
+                print(CRNumberSW, " from SW3 tab does not exist in Total data")
     #-------------------------DOCS 1--------------------------------------------- 
 #    SWTab = book.sheet_by_name(SoftwareVersion)
     Docs1Tab = book.sheet_by_name(DocsVersion1)
@@ -544,7 +595,7 @@ def write_new_HLS_and_TotalData(HLS, TotalData):
     ws = wb.add_worksheet("HLS")
     ws2 = wb.add_worksheet("Total Data")
     ws3 = wb.add_worksheet("Link")
-    document = docx.Document()
+    document = Document()
     
     position_format = wb.add_format()
     #date_form = wb.add_format({'num_format': 'mm/dd/yy'})
@@ -635,6 +686,9 @@ def find_duplicates(HLS):
                     str2 = str2.upper()
                     if str1 == str2:
                         print(HLS[j][3], "is duplicate")
+                        HLS[i].append('')
+                        HLS[j].append('')
+
                         HLS[i][4] = "Duplicate on file"
                         HLS[j][4] = "Duplicate on file"
     return HLS

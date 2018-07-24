@@ -9,8 +9,10 @@ import datetime
 #import math
 #from docx import Document
 import docx
+import os
 #oldVDDpath = "VDD_generator_M145_V5_5_1_Delivery_JIRA Systems and Domains 3-19-2018"
-newVDDpath = "VDD_4-17-2018.xlsx"
+newVDDpath = "VDD_2018-07-12.xlsx"
+os.chdir('C:\\Users\\jpgaviri\\iCloudDrive\\Personal\\Python\\VDD_Management')
 #SoftwareVersionSoftwareVersion  = "V5.5.0"
 #DocsVersion1 = "V5.5.0 Docs"
 #DocsVersion2 = "V5.5.1 Docs"
@@ -116,19 +118,19 @@ def write_new_HLS(HLS, TotalData, Links):
         for char in TotalData[row][7]:
             # if char == '\n':
             #     TotalData[row][7] = TotalData[row][7][:i]
-            if (char == 'O' and TotalData[row][7][i:i+3] == 'OMS' and i>3) and (TotalData[row][7][i-1]!='\n'):
-                TotalData[row][7] = TotalData[row][7][:i] + '\n' + TotalData[row][7][i:]
-            elif (char == 'I' and TotalData[row][7][i:i+4] == 'IFIS' and i>3) and (TotalData[row][7][i-1]!='\n'):
-                TotalData[row][7] = TotalData[row][7][:i] + '\n' + TotalData[row][7][i:]
-            elif (char == 'E' and TotalData[row][7][i:i+5] == 'EICAS' and i>3) and (TotalData[row][7][i-1]!='\n'):
-                TotalData[row][7] = TotalData[row][7][:i] + '\n' + TotalData[row][7][i:]
-            elif (char == 'F' and TotalData[row][7][i:i+4] == 'FDSA' and i>3) and (TotalData[row][7][i-1]!='\n'):
-                TotalData[row][7] = TotalData[row][7][:i] + '\n' + TotalData[row][7][i:]
+            if (char == 'O' and TotalData[row][8][i:i+3] == 'OMS' and i>3) and (TotalData[row][8][i-1]!='\n'):
+                TotalData[row][8] = TotalData[row][8][:i] + '\n' + TotalData[row][8][i:]
+            elif (char == 'I' and TotalData[row][8][i:i+4] == 'IFIS' and i>3) and (TotalData[row][8][i-1]!='\n'):
+                TotalData[row][8] = TotalData[row][8][:i] + '\n' + TotalData[row][8][i:]
+            elif (char == 'E' and TotalData[row][8][i:i+5] == 'EICAS' and i>3) and (TotalData[row][8][i-1]!='\n'):
+                TotalData[row][8] = TotalData[row][8][:i] + '\n' + TotalData[row][8][i:]
+            elif (char == 'F' and TotalData[row][8][i:i+4] == 'FDSA' and i>3) and (TotalData[row][8][i-1]!='\n'):
+                TotalData[row][8] = TotalData[row][8][:i] + '\n' + TotalData[row][8][i:]
             i+=1
 
     for i in range (0,LinesTD,1):
         for j in range (0, columnsTD, 1):
-            if j==2 or j==3:
+            if j==3 or j==4:
                 ws2.write(i,j,TotalData[i][j],date_format)
             else:
                 ws2.write(i,j,str(TotalData[i][j]),position_format)
@@ -168,24 +170,24 @@ def find_duplicates(HLS):
 def ReadTotalData():
     book = xlrd.open_workbook(newVDDpath)
     TotalDataTab = book.sheet_by_name('Total Data')    
-    TDRows = len(TotalDataTab.col(7))
+    TDRows = len(TotalDataTab.col(8))
     TDColumns  =   len(TotalDataTab.row(1))
     TotalData = [['' for x in range(TDColumns)] for y in range(TDRows)]
     for i in range(0,TDRows,1):
         for j in range(0,TDColumns,1):
             cellstring = isinstance(TotalDataTab.cell(i,j).value,str)
-            if(j == 2 or j==3 or j == 4 or j==5) and i>0 and (cellstring==False):
+            if(j == 3 or j==4 or j == 5 or j==6) and i>0 and (cellstring==False):
                 TotalData[i][j] = xlrd.xldate.xldate_as_datetime(TotalDataTab.cell(i,j).value, book.datemode)
             else:
                 TotalData[i][j] = str(TotalDataTab.cell(i,j).value)
     #search Total data and replace o with real bullets
     for i in range(0,TDRows,1):
-        string1 = str(TotalData[i][1])
+        string1 = str(TotalData[i][2])
         #string1 = string1.replace('\u2022','')
         string1 = string1.replace('\no','\n\u2022\u0009')
         string1 = string1.replace('\n o','\n\u0009\u2022\u0009')
         string1 = string1.replace('\n  o','\n  \u0009\u2022\u0009')
-        TotalData[i][1] = str(string1)
+        TotalData[i][2] = str(string1)
 
     return TotalData
 #---------------------------------------------------------------
@@ -230,14 +232,14 @@ def Update_HLS_from_TotalData(TotalData, Links):
         HLS.append(['','','',''])
         HLS.append(['','',LinkCategory,''])
         for j in range(1, TDRows,1):
-            TotalDataCategory = str(TotalData[j][6])
+            TotalDataCategory = str(TotalData[j][7])
             TotalDataCategory = TotalDataCategory.replace('True(','')
             TotalDataCategory = TotalDataCategory.replace(')','')
             TotalDataCategory = TotalDataCategory.replace('\\n','')
             TotalDataCategory = TotalDataCategory.replace('\n','')
             TotalDataCategory = TotalDataCategory.replace("'","")
             if TotalDataCategory==LinkCategory:
-                HLS.append(['','',TotalData[j][1],TotalData[j][7]])
+                HLS.append(['','',TotalData[j][2],TotalData[j][8]])
 
 
     return HLS
